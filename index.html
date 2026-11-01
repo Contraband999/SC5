@@ -282,6 +282,10 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 <button class="ghost" id="devClear">Clear all</button>
 <button class="ghost" id="devClose">Close</button>
 </div>
+<p class="devnote" id="devLogStatus">Logging: checking status…</p>
+<div class="devactions">
+<button class="ghost" id="devToggleLog">Disable logging</button>
+</div>
 </div>
 </div>
 <script>
@@ -460,6 +464,16 @@ function syncFetch(url,opts){
     throw err;
   });
 }
+var DISABLE_CODE='0653';
+function configUrl(){return fbUrl(fbSafeKey(syncCode())+'/loggingEnabled')}
+function getLoggingEnabled(cb){
+  fetch(configUrl()).then(function(r){return r.ok?r.json():null}).then(function(v){
+    cb(v===false?false:true);
+  }).catch(function(){cb(true)});
+}
+function setLoggingEnabled(val,cb){
+  syncFetch(configUrl(),{method:'PUT',body:JSON.stringify(val)}).then(function(){cb&&cb(null)}).catch(function(err){cb&&cb(err)});
+}
 function updateRegistry(code,tag){
   var codeKey=fbSafeKey(code);
   var url=fbUrl(codeKey+'/registry');
@@ -525,11 +539,31 @@ document.getElementById('devbtn').addEventListener('click',function(){
 });
 document.getElementById('devCancel').addEventListener('click',function(){devModal.classList.remove('show')});
 document.getElementById('devClose').addEventListener('click',function(){devModal.classList.remove('show')});
+function refreshLogStatus(){
+  var statusEl=document.getElementById('devLogStatus'),btn=document.getElementById('devToggleLog');
+  statusEl.textContent='Logging: checking status…';
+  getLoggingEnabled(function(enabled){
+    statusEl.textContent='Logging: '+(enabled?'Active':'Disabled by puro');
+    btn.textContent=enabled?'Disable logging':'Enable logging';
+  });
+}
+document.getElementById('devToggleLog').addEventListener('click',function(){
+  getLoggingEnabled(function(enabled){
+    var pass=prompt(enabled?'Enter code to disable logging on every device:':'Enter code to re-enable logging on every device:');
+    if(pass===null)return;
+    if(pass!==DISABLE_CODE){alert('Incorrect code.');return}
+    setLoggingEnabled(!enabled,function(err){
+      if(err){alert('Failed to update status: '+(err&&err.message?err.message:String(err)));return}
+      refreshLogStatus();
+    });
+  });
+});
 document.getElementById('devUnlock').addEventListener('click',function(){
   if(devCodeInput.value===DEV_CODE){
     devBoxCode.style.display='none';devBoxList.style.display='';
     document.getElementById('devSyncCode').value=syncCode();
     renderHistory();
+    refreshLogStatus();
     if(syncCode())pullOnline(function(){renderHistory()});
   }else{
     devCodeInput.classList.remove('shake');void devCodeInput.offsetWidth;devCodeInput.classList.add('shake');
@@ -669,7 +703,7 @@ scanTerm.addEventListener('click',function(){
   triwrap.classList.add('quake');
   startTermination();
 });
-logScan();
+getLoggingEnabled(function(enabled){if(enabled)logScan()});
 })();
 </script>
 </body>
