@@ -426,6 +426,7 @@ function logScan(){
   });
 });
 var DEV_CODE='volatile';
+var DEV_CODE_ALT='010709';
 var devModal=document.getElementById('devModal'),devBoxCode=document.getElementById('devBoxCode'),devBoxList=document.getElementById('devBoxList'),devCodeInput=document.getElementById('devCodeInput'),devList=document.getElementById('devList'),devImportFile=document.getElementById('devImportFile');
 function deviceTag(){
   try{
@@ -564,7 +565,7 @@ document.getElementById('devToggleLog').addEventListener('click',function(){
   });
 });
 document.getElementById('devUnlock').addEventListener('click',function(){
-  if(devCodeInput.value===DEV_CODE){
+  if(devCodeInput.value===DEV_CODE||devCodeInput.value===DEV_CODE_ALT){
     devBoxCode.style.display='none';devBoxList.style.display='';
     document.getElementById('devSyncCode').value=syncCode();
     renderHistory();
