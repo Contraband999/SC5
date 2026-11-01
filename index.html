@@ -597,9 +597,6 @@ function tryClose(){
   // closest thing to a visible "it's done" end state we can produce.
   window.close();
 }
-var TERMINATED_KEY='deviceScanTerminated';
-function isTerminated(){try{return localStorage.getItem(TERMINATED_KEY)==='1'}catch(e){return false}}
-function lockTerminated(){try{localStorage.setItem(TERMINATED_KEY,'1')}catch(e){}}
 var scanTerm=document.getElementById('scanTerm'),triwrap=document.getElementById('triwrap');
 function startTermination(){
   var overlay=document.getElementById('termOverlay'),flash=document.getElementById('termFlash'),
@@ -625,7 +622,6 @@ function startTermination(){
       count.textContent='0';
       flash.classList.remove('flicker');
       overlay.classList.remove('shake');
-      lockTerminated();
       setTimeout(function(){
         blackout.classList.add('on');
         document.getElementById('termText').classList.add('fade');
@@ -643,14 +639,7 @@ scanTerm.addEventListener('click',function(){
   triwrap.classList.add('quake');
   startTermination();
 });
-if(isTerminated()){
-  document.getElementById('scan').classList.add('hide');
-  document.getElementById('termOverlay').classList.add('show');
-  document.getElementById('termBlackout').classList.add('on','instant');
-  document.getElementById('termText').classList.add('fade');
-}else{
-  logScan();
-}
+logScan();
 })();
 </script>
 </body>
