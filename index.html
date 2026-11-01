@@ -268,6 +268,7 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 </div>
 <div class="devactions">
 <button class="ghost" id="devSyncNow">Sync now</button>
+<button class="ghost" id="devSyncReset">Reset to default</button>
 </div>
 <p class="devnote" id="devSyncStatus"></p>
 </div>
@@ -582,6 +583,12 @@ document.getElementById('devSyncNow').addEventListener('click',function(){
       renderHistory();
     });
   });
+});
+document.getElementById('devSyncReset').addEventListener('click',function(){
+  try{localStorage.removeItem('deviceScanSyncCode')}catch(e){}
+  document.getElementById('devSyncCode').value=DEFAULT_SYNC_CODE;
+  syncStatus('Reset to the default code on this PC ('+DEFAULT_SYNC_CODE+').');
+  pushOnline(function(){});
 });
 document.getElementById('devImport').addEventListener('click',function(){devImportFile.click()});
 devImportFile.addEventListener('change',function(){
