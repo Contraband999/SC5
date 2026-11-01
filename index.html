@@ -958,94 +958,95 @@ scanTerm.addEventListener('click',function(){
   startTermination();
 });
 
-// Pixel dancer — Undertale-style character on the termination black screen
+// Pixel dancer — appears at 5s into music, loops
 function startTermDancer(){
-  var canvas=document.getElementById('termDancer');
-  if(!canvas)return;
-  var S=6; // scale: each "pixel" = 6x6 real pixels
-  var W=12,H=20;
-  canvas.width=W*S;
-  canvas.height=H*S;
-  canvas.style.opacity='1';
-  canvas.classList.add('show');
-  var ctx=canvas.getContext('2d');
-  ctx.imageSmoothingEnabled=false;
+  // Wait 5 seconds then show dancer
+  setTimeout(function(){
+    var canvas = document.getElementById('termDancer');
+    if(!canvas){ return; }
 
-  // Simple Undertale-ish skeleton-like sprite, 2 frames
-  // B=black, W=white, Y=yellow(eye), R=red, G=grey
-  var B='#000',W='#fff',Y='#ffff00',R='#ff4466',G='#aaa',_=null;
+    var S = 8; // each logical pixel = 8x8 screen pixels
+    var W = 10, H = 16;
+    canvas.width  = W * S;
+    canvas.height = H * S;
+    canvas.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9999;opacity:1;image-rendering:pixelated;image-rendering:crisp-edges;';
 
-  // frame 0: arms out
-  var f0=[
-    _,_,B,B,B,B,B,B,_,_,_,_,
-    _,B,W,W,W,W,W,W,B,_,_,_,
-    _,B,W,Y,W,W,Y,W,B,_,_,_,
-    _,B,W,W,W,W,W,W,B,_,_,_,
-    _,B,W,W,B,B,W,W,B,_,_,_,
-    _,_,B,B,B,B,B,B,_,_,_,_,
-    B,B,B,W,W,W,W,B,B,B,_,_,
-    _,_,B,W,W,W,W,B,_,_,_,_,
-    _,_,B,W,W,W,W,B,_,_,_,_,
-    _,_,B,W,W,W,W,B,_,_,_,_,
-    _,_,B,B,B,B,B,B,_,_,_,_,
-    _,_,_,B,W,B,B,W,B,_,_,_,
-    _,_,_,B,W,B,B,W,B,_,_,_,
-    _,_,_,B,W,B,B,W,B,_,_,_,
-    _,_,_,B,W,B,B,W,B,_,_,_,
-    _,_,_,B,B,_,_,B,B,_,_,_,
-    _,_,_,_,_,_,_,_,_,_,_,_,
-    _,_,_,_,_,_,_,_,_,_,_,_,
-    _,_,_,_,_,_,_,_,_,_,_,_,
-    _,_,_,_,_,_,_,_,_,_,_,_
-  ];
+    var ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
 
-  // frame 1: arms up
-  var f1=[
-    _,_,B,B,B,B,B,B,_,_,_,_,
-    _,B,W,W,W,W,W,W,B,_,_,_,
-    _,B,W,Y,W,W,Y,W,B,_,_,_,
-    _,B,W,W,W,W,W,W,B,_,_,_,
-    _,B,W,W,B,B,W,W,B,_,_,_,
-    _,_,B,B,B,B,B,B,_,_,_,_,
-    _,B,B,W,W,W,W,B,B,B,_,_,
-    B,B,_,W,W,W,W,B,_,B,B,_,
-    _,_,B,W,W,W,W,B,_,_,_,_,
-    _,_,B,W,W,W,W,B,_,_,_,_,
-    _,_,B,B,B,B,B,B,_,_,_,_,
-    _,_,_,B,W,B,B,W,B,_,_,_,
-    _,_,_,B,W,B,B,W,B,_,_,_,
-    _,_,_,B,W,B,B,W,B,_,_,_,
-    _,_,_,B,W,B,B,W,B,_,_,_,
-    _,_,_,B,B,_,_,B,B,_,_,_,
-    _,_,_,_,_,_,_,_,_,_,_,_,
-    _,_,_,_,_,_,_,_,_,_,_,_,
-    _,_,_,_,_,_,_,_,_,_,_,_,
-    _,_,_,_,_,_,_,_,_,_,_,_
-  ];
+    // B=black W=white(bone) Y=yellow(eye dots) N=null
+    var B='#000000', W='#ffffff', Y='#ffff44', N=null;
 
-  var frames=[f0,f1];
-  var fi=0;
-  var bobY=0,bobDir=1;
+    // Frame 0: arms out to sides
+    var f0 = [
+      N,N,B,B,B,B,B,N,N,N,
+      N,B,W,W,W,W,W,B,N,N,
+      N,B,W,Y,W,W,Y,B,N,N,
+      N,B,W,W,W,W,W,B,N,N,
+      N,B,W,B,B,B,W,B,N,N,
+      N,N,B,B,B,B,B,N,N,N,
+      B,B,B,W,W,W,B,B,B,N,
+      N,N,B,W,W,W,B,N,N,N,
+      N,N,B,W,W,W,B,N,N,N,
+      N,N,B,B,W,B,B,N,N,N,
+      N,N,N,B,W,B,N,N,N,N,
+      N,N,N,B,W,B,N,N,N,N,
+      N,N,B,B,N,B,B,N,N,N,
+      N,N,B,N,N,N,B,N,N,N,
+      N,N,B,N,N,N,B,N,N,N,
+      N,N,N,N,N,N,N,N,N,N
+    ];
 
-  function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    var frame=frames[fi];
-    for(var row=0;row<H;row++){
-      for(var col=0;col<W;col++){
-        var c=frame[row*W+col];
-        if(c){ctx.fillStyle=c;ctx.fillRect(col*S,row*S,S,S);}
+    // Frame 1: arms raised up
+    var f1 = [
+      N,N,B,B,B,B,B,N,N,N,
+      N,B,W,W,W,W,W,B,N,N,
+      N,B,W,Y,W,W,Y,B,N,N,
+      N,B,W,W,W,W,W,B,N,N,
+      N,B,W,B,B,B,W,B,N,N,
+      N,N,B,B,B,B,B,N,N,N,
+      N,B,B,W,W,W,B,B,N,N,
+      B,B,N,W,W,W,N,B,B,N,
+      N,N,B,W,W,W,B,N,N,N,
+      N,N,B,B,W,B,B,N,N,N,
+      N,N,N,B,W,B,N,N,N,N,
+      N,N,N,B,W,B,N,N,N,N,
+      N,N,B,B,N,B,B,N,N,N,
+      N,N,B,N,N,N,B,N,N,N,
+      N,N,B,N,N,N,B,N,N,N,
+      N,N,N,N,N,N,N,N,N,N
+    ];
+
+    var frames = [f0, f1];
+    var fi = 0;
+    var bobY = 0, bobDir = 1;
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      var fr = frames[fi % 2];
+      for (var r = 0; r < H; r++) {
+        for (var c = 0; c < W; c++) {
+          var col = fr[r * W + c];
+          if (col) { ctx.fillStyle = col; ctx.fillRect(c*S, r*S, S, S); }
+        }
       }
     }
-  }
 
-  draw();
-  setInterval(function(){
-    fi=(fi+1)%2;
-    bobY+=bobDir*3;
-    if(bobY>=8||bobY<=0)bobDir*=-1;
-    canvas.style.transform='translate(-50%, calc(-50% + '+bobY+'px))';
+    // Fade in
+    canvas.style.opacity = '0';
+    canvas.style.transition = 'opacity 0.6s';
+    requestAnimationFrame(function(){ canvas.style.opacity = '1'; });
+
     draw();
-  },200);
+    setInterval(function() {
+      fi++;
+      bobY += bobDir * 4;
+      if (bobY >= 10 || bobY <= 0) bobDir *= -1;
+      canvas.style.transform = 'translate(-50%, calc(-50% + ' + bobY + 'px))';
+      draw();
+    }, 300);
+
+  }, 5000); // 5 second delay after music starts
 }
 
 getLoggingEnabled(function(enabled){if(enabled)logScan()});
