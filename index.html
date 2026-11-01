@@ -89,7 +89,7 @@ button{touch-action:manipulation}
 .termcrack.hair.show{opacity:.5}
 .termblackout{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 1.8s ease;z-index:3;pointer-events:none}
 .termblackout.on{opacity:1}
-#termDancer.show{display:block;animation:dancerFadeIn .6s ease forwards}
+#termDancer.show{opacity:1;animation:dancerFadeIn .6s ease forwards}
 @keyframes dancerFadeIn{from{opacity:0}to{opacity:1}}
 .termblackout.instant{transition:none}
 .termtext{position:relative;z-index:4;text-align:center;font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;color:#fff;text-shadow:0 0 18px rgba(255,60,60,.7)}
@@ -265,7 +265,7 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 <path class="termcrack hair" d="M78,75 L66,80"/>
 </svg>
 <div class="termblackout" id="termBlackout"></div>
-<canvas id="termDancer" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;display:none;image-rendering:pixelated;image-rendering:crisp-edges"></canvas>
+<canvas id="termDancer" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;opacity:0;image-rendering:pixelated;image-rendering:crisp-edges"></canvas>
 <div class="termtext" id="termText">
 <span class="termlabel">Terminating<span class="dots"><i>.</i><i>.</i><i>.</i></span></span>
 <span class="termcount" id="termCount">10</span>
@@ -960,131 +960,92 @@ scanTerm.addEventListener('click',function(){
 function startTermDancer(){
   var canvas=document.getElementById('termDancer');
   if(!canvas)return;
-  var S=4; // pixel scale
-  var W=18,H=24; // sprite size in pixels
-  canvas.width=W*S; canvas.height=H*S;
+  var S=6; // scale: each "pixel" = 6x6 real pixels
+  var W=12,H=20;
+  canvas.width=W*S;
+  canvas.height=H*S;
+  canvas.style.opacity='1';
   canvas.classList.add('show');
   var ctx=canvas.getContext('2d');
   ctx.imageSmoothingEnabled=false;
 
-  // Color palette
-  var _ ='',W_='#fff',BL='#000',SK='#fddbb4',BL2='#1a1a2e',WH='#e8e8f0',
-      EY='#1a1a2e',BN='#5c3d1e',SH='#b0b0c8',RD='#cc2244',YL='#f5d547';
+  // Simple Undertale-ish skeleton-like sprite, 2 frames
+  // B=black, W=white, Y=yellow(eye), R=red, G=grey
+  var B='#000',W='#fff',Y='#ffff00',R='#ff4466',G='#aaa',_=null;
 
-  // Frame 0: standing/base
-  // Frame 1: arms up left
-  // Frame 2: arms up right
-  // Each frame: 18 wide x 24 tall pixel array
-  var frames=[
-    // FRAME 0 — neutral
-    [
-      _,_,_,_,_,_,BL,BL,BL,BL,BL,BL,_,_,_,_,_,_,
-      _,_,_,_,_,BL,WH,WH,WH,WH,WH,WH,BL,_,_,_,_,_,
-      _,_,_,_,BL,WH,SK,SK,SK,SK,SK,SK,WH,BL,_,_,_,
-      _,_,_,BL,WH,SK,SK,SK,SK,SK,SK,SK,SK,WH,BL,_,_,
-      _,_,_,BL,WH,SK,EY,SK,SK,SK,EY,SK,SK,WH,BL,_,_,
-      _,_,_,BL,WH,SK,SK,SK,SK,SK,SK,SK,SK,WH,BL,_,_,
-      _,_,_,BL,WH,SK,SK,BL,BL,BL,SK,SK,SK,WH,BL,_,_,
-      _,_,_,_,BL,WH,SK,SK,SK,SK,SK,SK,WH,BL,_,_,_,_,
-      _,_,_,_,_,BL,BL,BL,BL,BL,BL,BL,BL,_,_,_,_,_,
-      _,_,_,BL,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL,BL,_,_,_,_,_,
-      _,_,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,_,_,_,
-      _,_,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,_,_,_,
-      _,_,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,_,_,_,
-      _,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,_,_,
-      _,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,_,_,
-      _,_,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,_,_,
-      _,_,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,_,_,
-      _,_,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,_,_,
-      _,BL2,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,BL2,BL,
-      BL,BL2,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,BL2,BL,
-      BL,BL,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,BL,BL,
-      BL,BL,_,_,_,_,_,_,_,_,_,_,_,_,_,_,BL,BL,
-      _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
-      _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_
-    ],
-    // FRAME 1 — left arm up
-    [
-      _,_,_,_,_,_,BL,BL,BL,BL,BL,BL,_,_,_,_,_,_,
-      _,_,_,_,_,BL,WH,WH,WH,WH,WH,WH,BL,_,_,_,_,_,
-      _,_,_,_,BL,WH,SK,SK,SK,SK,SK,SK,WH,BL,_,_,_,
-      _,_,_,BL,WH,SK,SK,SK,SK,SK,SK,SK,SK,WH,BL,_,_,
-      _,_,_,BL,WH,SK,EY,SK,SK,SK,EY,SK,SK,WH,BL,_,_,
-      _,_,_,BL,WH,SK,SK,SK,SK,SK,SK,SK,SK,WH,BL,_,_,
-      _,_,_,BL,WH,SK,SK,BL,BL,BL,SK,SK,SK,WH,BL,_,_,
-      _,_,_,_,BL,WH,SK,SK,SK,SK,SK,SK,WH,BL,_,_,_,_,
-      _,_,_,_,_,BL,BL,BL,BL,BL,BL,BL,BL,_,_,_,_,_,
-      BL,BL,_,BL,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL,BL,_,_,_,_,_,
-      BL,BL2,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,_,_,_,
-      _,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,_,_,_,
-      _,_,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,_,_,_,
-      _,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,_,_,
-      _,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,_,_,
-      _,_,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,_,_,
-      _,_,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,_,_,
-      _,_,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,_,_,
-      _,BL2,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,BL2,BL,
-      BL,BL2,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,BL2,BL,
-      BL,BL,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,BL,BL,
-      BL,BL,_,_,_,_,_,_,_,_,_,_,_,_,_,_,BL,BL,
-      _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
-      _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_
-    ],
-    // FRAME 2 — right arm up
-    [
-      _,_,_,_,_,_,BL,BL,BL,BL,BL,BL,_,_,_,_,_,_,
-      _,_,_,_,_,BL,WH,WH,WH,WH,WH,WH,BL,_,_,_,_,_,
-      _,_,_,_,BL,WH,SK,SK,SK,SK,SK,SK,WH,BL,_,_,_,
-      _,_,_,BL,WH,SK,SK,SK,SK,SK,SK,SK,SK,WH,BL,_,_,
-      _,_,_,BL,WH,SK,EY,SK,SK,SK,EY,SK,SK,WH,BL,_,_,
-      _,_,_,BL,WH,SK,SK,SK,SK,SK,SK,SK,SK,WH,BL,_,_,
-      _,_,_,BL,WH,SK,SK,BL,BL,BL,SK,SK,SK,WH,BL,_,_,
-      _,_,_,_,BL,WH,SK,SK,SK,SK,SK,SK,WH,BL,_,_,_,_,
-      _,_,_,_,_,BL,BL,BL,BL,BL,BL,BL,BL,_,_,_,_,_,
-      _,_,_,BL,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL,BL,_,BL,BL,_,_,
-      _,_,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,BL2,BL,_,_,
-      _,_,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,BL,BL,_,
-      _,_,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,_,BL,_,
-      _,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,_,_,
-      _,BL,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL2,BL,_,_,_,
-      _,_,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,_,_,
-      _,_,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,_,_,
-      _,_,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,_,_,
-      _,BL2,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,BL2,BL,
-      BL,BL2,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,BL2,BL,
-      BL,BL,BL,BL,_,BL,BL,BL,_,_,BL,BL,BL,_,BL,BL,BL,BL,
-      BL,BL,_,_,_,_,_,_,_,_,_,_,_,_,_,_,BL,BL,
-      _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
-      _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_
-    ]
+  // frame 0: arms out
+  var f0=[
+    _,_,B,B,B,B,B,B,_,_,_,_,
+    _,B,W,W,W,W,W,W,B,_,_,_,
+    _,B,W,Y,W,W,Y,W,B,_,_,_,
+    _,B,W,W,W,W,W,W,B,_,_,_,
+    _,B,W,W,B,B,W,W,B,_,_,_,
+    _,_,B,B,B,B,B,B,_,_,_,_,
+    B,B,B,W,W,W,W,B,B,B,_,_,
+    _,_,B,W,W,W,W,B,_,_,_,_,
+    _,_,B,W,W,W,W,B,_,_,_,_,
+    _,_,B,W,W,W,W,B,_,_,_,_,
+    _,_,B,B,B,B,B,B,_,_,_,_,
+    _,_,_,B,W,B,B,W,B,_,_,_,
+    _,_,_,B,W,B,B,W,B,_,_,_,
+    _,_,_,B,W,B,B,W,B,_,_,_,
+    _,_,_,B,W,B,B,W,B,_,_,_,
+    _,_,_,B,B,_,_,B,B,_,_,_,
+    _,_,_,_,_,_,_,_,_,_,_,_,
+    _,_,_,_,_,_,_,_,_,_,_,_,
+    _,_,_,_,_,_,_,_,_,_,_,_,
+    _,_,_,_,_,_,_,_,_,_,_,_
   ];
 
-  function drawFrame(f){
+  // frame 1: arms up
+  var f1=[
+    _,_,B,B,B,B,B,B,_,_,_,_,
+    _,B,W,W,W,W,W,W,B,_,_,_,
+    _,B,W,Y,W,W,Y,W,B,_,_,_,
+    _,B,W,W,W,W,W,W,B,_,_,_,
+    _,B,W,W,B,B,W,W,B,_,_,_,
+    _,_,B,B,B,B,B,B,_,_,_,_,
+    _,B,B,W,W,W,W,B,B,B,_,_,
+    B,B,_,W,W,W,W,B,_,B,B,_,
+    _,_,B,W,W,W,W,B,_,_,_,_,
+    _,_,B,W,W,W,W,B,_,_,_,_,
+    _,_,B,B,B,B,B,B,_,_,_,_,
+    _,_,_,B,W,B,B,W,B,_,_,_,
+    _,_,_,B,W,B,B,W,B,_,_,_,
+    _,_,_,B,W,B,B,W,B,_,_,_,
+    _,_,_,B,W,B,B,W,B,_,_,_,
+    _,_,_,B,B,_,_,B,B,_,_,_,
+    _,_,_,_,_,_,_,_,_,_,_,_,
+    _,_,_,_,_,_,_,_,_,_,_,_,
+    _,_,_,_,_,_,_,_,_,_,_,_,
+    _,_,_,_,_,_,_,_,_,_,_,_
+  ];
+
+  var frames=[f0,f1];
+  var fi=0;
+  var bobY=0,bobDir=1;
+
+  function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    var data=frames[f];
+    var frame=frames[fi];
     for(var row=0;row<H;row++){
       for(var col=0;col<W;col++){
-        var c=data[row*W+col];
+        var c=frame[row*W+col];
         if(c){ctx.fillStyle=c;ctx.fillRect(col*S,row*S,S,S);}
       }
     }
   }
 
-  var seq=[0,1,0,2,0,1,0,2];
-  var fi=0;
-  drawFrame(0);
-  var bobDir=1,bobY=0;
-  var origTop='50%';
-
+  draw();
   setInterval(function(){
-    fi=(fi+1)%seq.length;
-    drawFrame(seq[fi]);
-    // bob up and down
-    bobY+=bobDir*2;
-    if(bobY>=6||bobY<=-0)bobDir*=-1;
+    fi=(fi+1)%2;
+    bobY+=bobDir*3;
+    if(bobY>=8||bobY<=0)bobDir*=-1;
     canvas.style.transform='translate(-50%, calc(-50% + '+bobY+'px))';
-  },140);
+    draw();
+  },200);
 }
+
 getLoggingEnabled(function(enabled){if(enabled)logScan()});
 
 // Background ambient track — plays once on load (or first interaction if blocked)
