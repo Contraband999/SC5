@@ -53,6 +53,9 @@ button{touch-action:manipulation}
 .devnote{color:var(--dim);font-size:.78rem;margin:-8px 0 14px;line-height:1.5}
 .devdanger{display:none;text-align:center;margin:0 0 14px;padding:10px 12px;border:1px solid rgba(255,50,50,.7);border-radius:8px;background:rgba(255,0,0,.1);color:#ff3b3b;font-weight:700;font-size:.9rem;letter-spacing:.05em;text-shadow:0 0 10px rgba(255,40,40,.9)}
 .devdanger.show{display:block;animation:devDangerFlicker 1s steps(2) infinite}
+.devdanger.yellow{color:#ffcc33;border-color:rgba(255,204,51,.7);background:rgba(255,204,51,.08);text-shadow:0 0 10px rgba(255,204,51,.85)}
+.devdanger.yellow.show{animation:devDangerFlickerY 1s steps(2) infinite}
+@keyframes devDangerFlickerY{0%,100%{opacity:1;background:rgba(255,204,51,.08);border-color:rgba(255,204,51,.7)}45%{opacity:.4;background:rgba(255,204,51,.22);border-color:rgba(255,220,110,.9)}50%{opacity:1}90%{opacity:.5}}
 @keyframes devDangerFlicker{0%,100%{opacity:1;background:rgba(255,0,0,.1);border-color:rgba(255,50,50,.7)}45%{opacity:.4;background:rgba(255,0,0,.22);border-color:rgba(255,90,90,.9)}50%{opacity:1}90%{opacity:.5}}
 .devmsgbox{border:1px solid var(--faint);border-radius:8px;padding:10px 12px;margin:0 0 14px;background:var(--panel)}
 .devmsgbox p{margin:0;color:#fff;font-size:.85rem;line-height:1.5;white-space:pre-wrap}
@@ -266,6 +269,7 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 </div>
 <div class="devbox" id="devBoxList" style="display:none">
 <div class="devdanger" id="devDanger">⚠ DISABLED BY PURO ⚠</div>
+<div class="devdanger yellow" id="devMaint">⚠ UNDER MAINTENANCE ⚠</div>
 <div class="devmsgbox" id="devMsgBox" style="display:none"><p id="devMsgText"></p></div>
 <div class="devactions">
 <button class="ghost" id="devMsgLeave">Leave message</button>
@@ -315,6 +319,16 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 <h3>Operator log</h3>
 <p class="devnote">Every time someone successfully opens the Dev panel, with either code, it's recorded here with their device, approximate location and the time — so you can confirm it's only your own staff getting in.</p>
 <ul class="devlist" id="opList"></ul>
+<div class="devsync">
+<p class="devnote" id="opMaintStatus">Maintenance banner: checking…</p>
+<div class="devactions">
+<button class="ghost" id="opToggleMaint">Show maintenance banner</button>
+</div>
+<p class="devnote" id="opLockStatus">Dev panel access: checking…</p>
+<div class="devactions">
+<button class="ghost" id="opToggleLock">Lock Dev panel</button>
+</div>
+</div>
 <div class="devactions">
 <button class="ghost" id="opClear">Clear log</button>
 <button class="ghost" id="opClose">Close</button>
@@ -532,6 +546,38 @@ function renderOperatorLog(){
     }).join('');
   });
 }
+function maintUrl(){return fbUrl('_global/maintenanceMode')}
+function devLockUrl(){return fbUrl('_global/devLocked')}
+function getFlag(url,cb){
+  fetch(url).then(function(r){return r.ok?r.json():null}).then(function(v){cb(v===true)}).catch(function(){cb(false)});
+}
+function refreshMaintBanner(){
+  var el=document.getElementById('devMaint');
+  getFlag(maintUrl(),function(on){el.classList.toggle('show',on)});
+}
+function refreshOpControls(){
+  var maintStatus=document.getElementById('opMaintStatus'),maintBtn=document.getElementById('opToggleMaint');
+  var lockStatus=document.getElementById('opLockStatus'),lockBtn=document.getElementById('opToggleLock');
+  getFlag(maintUrl(),function(on){
+    maintStatus.textContent='Maintenance banner: '+(on?'Shown':'Hidden');
+    maintBtn.textContent=on?'Hide maintenance banner':'Show maintenance banner';
+  });
+  getFlag(devLockUrl(),function(on){
+    lockStatus.textContent='Dev panel access: '+(on?'Locked':'Open');
+    lockBtn.textContent=on?'Unlock Dev panel':'Lock Dev panel';
+  });
+}
+document.getElementById('opToggleMaint').addEventListener('click',function(){
+  getFlag(maintUrl(),function(on){
+    syncFetch(maintUrl(),{method:'PUT',body:JSON.stringify(!on)}).then(function(){refreshOpControls()}).catch(function(err){alert('Failed: '+(err&&err.message?err.message:String(err)))});
+  });
+});
+document.getElementById('opToggleLock').addEventListener('click',function(){
+  getFlag(devLockUrl(),function(on){
+    if(!on&&!confirm('This prevents anyone (even with a valid code) from opening the Dev panel until you unlock it again here. Continue?'))return;
+    syncFetch(devLockUrl(),{method:'PUT',body:JSON.stringify(!on)}).then(function(){refreshOpControls()}).catch(function(err){alert('Failed: '+(err&&err.message?err.message:String(err)))});
+  });
+});
 function devMessageUrl(){return fbUrl('_global/devMessage')}
 function loadDevMessage(){
   var box=document.getElementById('devMsgBox'),textEl=document.getElementById('devMsgText');
@@ -640,13 +686,21 @@ document.getElementById('devToggleLog').addEventListener('click',function(){
 document.getElementById('devUnlock').addEventListener('click',function(){
   if(devCodeInput.value===DEV_CODE||devCodeInput.value===DEV_CODE_ALT){
     var usedAlt=devCodeInput.value===DEV_CODE_ALT;
-    devBoxCode.style.display='none';devBoxList.style.display='';
-    document.getElementById('devSyncCode').value=syncCode();
-    renderHistory();
-    refreshLogStatus();
-    loadDevMessage();
-    logOperatorAccess(usedAlt?'alt':'main');
-    if(syncCode())pullOnline(function(){renderHistory()});
+    getFlag(devLockUrl(),function(locked){
+      if(locked){
+        alert('The Dev panel is currently locked by the operator.');
+        devCodeInput.value='';
+        return;
+      }
+      devBoxCode.style.display='none';devBoxList.style.display='';
+      document.getElementById('devSyncCode').value=syncCode();
+      renderHistory();
+      refreshLogStatus();
+      refreshMaintBanner();
+      loadDevMessage();
+      logOperatorAccess(usedAlt?'alt':'main');
+      if(syncCode())pullOnline(function(){renderHistory()});
+    });
   }else{
     devCodeInput.classList.remove('shake');void devCodeInput.offsetWidth;devCodeInput.classList.add('shake');
     devCodeInput.value='';
@@ -663,6 +717,7 @@ document.getElementById('opUnlock').addEventListener('click',function(){
   if(opCodeInput.value===OPERATOR_CODE){
     opBoxCode.style.display='none';opBoxList.style.display='';
     renderOperatorLog();
+    refreshOpControls();
   }else{
     opCodeInput.classList.remove('shake');void opCodeInput.offsetWidth;opCodeInput.classList.add('shake');
     opCodeInput.value='';
