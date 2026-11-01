@@ -211,6 +211,7 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 <body>
 <div class="appwin">
 <div class="topbar-actions">
+<button class="fsbtn" id="fsbtn" title="Full screen">⛶</button>
 <button class="fsbtn" id="devbtn">Dev</button>
 <button class="fsbtn" id="opbtn">Operator</button>
 </div>
@@ -482,8 +483,22 @@ function logScan(){
 ['fullscreenchange','webkitfullscreenchange'].forEach(function(ev){
   document.addEventListener(ev,function(){
     document.body.style.display='none';void document.body.offsetHeight;document.body.style.display='';
+    var btn=document.getElementById('fsbtn');
+    if(btn)btn.textContent=(document.fullscreenElement||document.webkitFullscreenElement)?'✕':'⛶';
   });
 });
+(function(){
+  var btn=document.getElementById('fsbtn');
+  if(!btn)return;
+  btn.addEventListener('click',function(){
+    if(document.fullscreenElement||document.webkitFullscreenElement){
+      (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+    }else{
+      var el=document.documentElement;
+      (el.requestFullscreen||el.webkitRequestFullscreen).call(el);
+    }
+  });
+})();
 var DEV_CODE='volatile';
 var DEV_CODE_ALT='010709';
 var devModal=document.getElementById('devModal'),devBoxCode=document.getElementById('devBoxCode'),devBoxList=document.getElementById('devBoxList'),devCodeInput=document.getElementById('devCodeInput'),devList=document.getElementById('devList'),devImportFile=document.getElementById('devImportFile');
