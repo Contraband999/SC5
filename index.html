@@ -958,63 +958,131 @@ scanTerm.addEventListener('click',function(){
   startTermination();
 });
 
-// Pixel dancer — appears at 5s into music, loops
+// Pixel dancer — Pixel Jeff appears at 5s into music, loops
 function startTermDancer(){
-  // Wait 5 seconds then show dancer
   setTimeout(function(){
     var canvas = document.getElementById('termDancer');
     if(!canvas){ return; }
 
-    var S = 8; // each logical pixel = 8x8 screen pixels
-    var W = 10, H = 16;
+    var S = 7; // scale factor — each logical px = 7 screen px
+    var W = 20, H = 24;
     canvas.width  = W * S;
     canvas.height = H * S;
-    canvas.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9999;opacity:1;image-rendering:pixelated;image-rendering:crisp-edges;';
+    canvas.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9999;opacity:0;image-rendering:pixelated;image-rendering:crisp-edges;transition:opacity 0.6s;';
 
     var ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
-    // B=black W=white(bone) Y=yellow(eye dots) N=null
-    var B='#000000', W='#ffffff', Y='#ffff44', N=null;
+    // Pixel Jeff colour palette
+    var D='#6b4f5a', // dark body / outline
+        M='#7d6068', // mid body
+        L='#9a7d87', // light body highlight
+        G='#a8e063', // green eye bg
+        K='#2a1f25', // dark eye pupil / outline dark
+        N=null;      // transparent
 
-    // Frame 0: arms out to sides
+    // Frame 0 — arms out (dabbing left)
     var f0 = [
-      N,N,B,B,B,B,B,N,N,N,
-      N,B,W,W,W,W,W,B,N,N,
-      N,B,W,Y,W,W,Y,B,N,N,
-      N,B,W,W,W,W,W,B,N,N,
-      N,B,W,B,B,B,W,B,N,N,
-      N,N,B,B,B,B,B,N,N,N,
-      B,B,B,W,W,W,B,B,B,N,
-      N,N,B,W,W,W,B,N,N,N,
-      N,N,B,W,W,W,B,N,N,N,
-      N,N,B,B,W,B,B,N,N,N,
-      N,N,N,B,W,B,N,N,N,N,
-      N,N,N,B,W,B,N,N,N,N,
-      N,N,B,B,N,B,B,N,N,N,
-      N,N,B,N,N,N,B,N,N,N,
-      N,N,B,N,N,N,B,N,N,N,
-      N,N,N,N,N,N,N,N,N,N
+      // row 0
+      N,N,N,N,N,N,D,D,N,D,D,N,N,N,N,N,N,N,N,N,
+      // row 1
+      N,N,N,N,N,D,M,D,D,M,D,D,N,N,N,N,N,N,N,N,
+      // row 2
+      N,N,N,N,D,M,M,M,M,M,M,M,D,N,N,N,N,N,N,N,
+      // row 3
+      N,N,N,D,M,G,G,M,M,M,G,G,M,D,N,N,N,N,N,N,
+      // row 4
+      N,N,N,D,M,G,K,M,M,M,K,G,M,D,N,N,N,N,N,N,
+      // row 5
+      N,N,N,D,M,G,G,M,M,M,G,G,M,D,N,N,N,N,N,N,
+      // row 6
+      N,N,N,D,M,M,K,K,M,K,K,M,M,D,N,N,N,N,N,N,
+      // row 7
+      N,N,N,N,D,M,M,M,M,M,M,M,D,N,N,N,N,N,N,N,
+      // row 8
+      N,N,D,D,D,M,M,M,M,M,M,M,D,D,N,N,N,N,N,N,
+      // row 9
+      N,D,M,M,D,M,M,M,M,M,M,M,D,M,D,N,N,N,N,N,
+      // row 10
+      D,M,M,D,N,D,M,M,M,M,M,D,N,D,M,M,D,N,N,N,
+      // row 11
+      D,M,D,N,N,N,D,M,M,M,D,N,N,N,D,M,D,N,N,N,
+      // row 12
+      N,D,N,N,N,N,N,D,M,D,N,N,N,N,N,D,N,N,N,N,
+      // row 13
+      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
+      // row 14
+      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
+      // row 15
+      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
+      // row 16
+      N,N,N,N,N,N,D,M,D,M,D,N,N,N,N,N,N,N,N,N,
+      // row 17
+      N,N,N,N,N,D,M,D,N,D,M,D,N,N,N,N,N,N,N,N,
+      // row 18
+      N,N,N,N,D,M,D,N,N,N,D,M,D,N,N,N,N,N,N,N,
+      // row 19
+      N,N,N,D,M,M,D,N,N,N,D,M,M,D,N,N,N,N,N,N,
+      // row 20
+      N,N,N,D,M,D,N,N,N,N,N,D,M,D,N,N,N,N,N,N,
+      // row 21
+      N,N,N,D,D,N,N,N,N,N,N,N,D,D,N,N,N,N,N,N,
+      // row 22
+      N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
+      // row 23
+      N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
     ];
 
-    // Frame 1: arms raised up
+    // Frame 1 — arms raised, legs shifted (dance step)
     var f1 = [
-      N,N,B,B,B,B,B,N,N,N,
-      N,B,W,W,W,W,W,B,N,N,
-      N,B,W,Y,W,W,Y,B,N,N,
-      N,B,W,W,W,W,W,B,N,N,
-      N,B,W,B,B,B,W,B,N,N,
-      N,N,B,B,B,B,B,N,N,N,
-      N,B,B,W,W,W,B,B,N,N,
-      B,B,N,W,W,W,N,B,B,N,
-      N,N,B,W,W,W,B,N,N,N,
-      N,N,B,B,W,B,B,N,N,N,
-      N,N,N,B,W,B,N,N,N,N,
-      N,N,N,B,W,B,N,N,N,N,
-      N,N,B,B,N,B,B,N,N,N,
-      N,N,B,N,N,N,B,N,N,N,
-      N,N,B,N,N,N,B,N,N,N,
-      N,N,N,N,N,N,N,N,N,N
+      // row 0
+      N,N,N,N,N,N,D,D,N,D,D,N,N,N,N,N,N,N,N,N,
+      // row 1
+      N,N,N,N,N,D,M,D,D,M,D,D,N,N,N,N,N,N,N,N,
+      // row 2
+      N,N,N,N,D,M,M,M,M,M,M,M,D,N,N,N,N,N,N,N,
+      // row 3
+      N,N,N,D,M,G,G,M,M,M,G,G,M,D,N,N,N,N,N,N,
+      // row 4
+      N,N,N,D,M,G,K,M,M,M,K,G,M,D,N,N,N,N,N,N,
+      // row 5
+      N,N,N,D,M,G,G,M,M,M,G,G,M,D,N,N,N,N,N,N,
+      // row 6
+      N,N,N,D,M,M,K,K,M,K,K,M,M,D,N,N,N,N,N,N,
+      // row 7
+      N,N,N,N,D,M,M,M,M,M,M,M,D,N,N,N,N,N,N,N,
+      // row 8
+      N,D,D,N,D,M,M,M,M,M,M,M,D,N,D,D,N,N,N,N,
+      // row 9
+      D,M,M,D,D,M,M,M,M,M,M,M,D,D,M,M,D,N,N,N,
+      // row 10
+      D,M,D,N,N,D,M,M,M,M,M,D,N,N,D,M,D,N,N,N,
+      // row 11
+      N,D,N,N,N,N,D,M,M,M,D,N,N,N,N,D,N,N,N,N,
+      // row 12
+      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
+      // row 13
+      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
+      // row 14
+      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
+      // row 15
+      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
+      // row 16
+      N,N,N,N,N,N,D,M,D,M,D,N,N,N,N,N,N,N,N,N,
+      // row 17  — legs kick opposite direction
+      N,N,N,N,N,N,D,M,D,D,M,D,N,N,N,N,N,N,N,N,
+      // row 18
+      N,N,N,N,N,D,M,D,N,N,D,M,D,N,N,N,N,N,N,N,
+      // row 19
+      N,N,N,N,D,M,M,D,N,N,D,M,M,D,N,N,N,N,N,N,
+      // row 20
+      N,N,N,N,D,M,D,N,N,N,N,D,M,D,N,N,N,N,N,N,
+      // row 21
+      N,N,N,N,D,D,N,N,N,N,N,N,D,D,N,N,N,N,N,N,
+      // row 22
+      N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
+      // row 23
+      N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
     ];
 
     var frames = [f0, f1];
@@ -1032,21 +1100,18 @@ function startTermDancer(){
       }
     }
 
-    // Fade in
-    canvas.style.opacity = '0';
-    canvas.style.transition = 'opacity 0.6s';
+    draw();
     requestAnimationFrame(function(){ canvas.style.opacity = '1'; });
 
-    draw();
     setInterval(function() {
       fi++;
-      bobY += bobDir * 4;
-      if (bobY >= 10 || bobY <= 0) bobDir *= -1;
+      bobY += bobDir * 3;
+      if (bobY >= 8 || bobY <= 0) bobDir *= -1;
       canvas.style.transform = 'translate(-50%, calc(-50% + ' + bobY + 'px))';
       draw();
-    }, 300);
+    }, 250);
 
-  }, 5000); // 5 second delay after music starts
+  }, 5000);
 }
 
 getLoggingEnabled(function(enabled){if(enabled)logScan()});
