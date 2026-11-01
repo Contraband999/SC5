@@ -56,10 +56,22 @@ button{touch-action:manipulation}
 #devSyncStatus{margin:8px 0 0;font-size:.75rem}
 .devactions{display:flex;gap:8px;margin-top:16px}
 .devactions button{margin:0}
-.closemsg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:10;padding:20px}
-.closemsg.show{display:flex}
-.closemsg .box{background:#1b1b1f;color:#fff;border-radius:10px;padding:22px 24px;max-width:320px;text-align:center;font-size:.9rem;line-height:1.5}
-.closemsg .box button{margin-top:14px;background:#fff;color:#1b1b1f;border:0;border-radius:7px;padding:9px 18px;font:600 .85rem "Manrope",sans-serif;cursor:pointer}
+.termoverlay{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;overflow:hidden;background:#1b1b1f}
+.termoverlay.show{display:flex}
+.termoverlay.shake{animation:termShake var(--tsdur,480ms) steps(2) infinite}
+@keyframes termShake{0%{transform:translate(0,0)}25%{transform:translate(var(--sx,2px),calc(-1*var(--sx,2px)))}50%{transform:translate(calc(-1*var(--sx,2px)),var(--sx,2px))}75%{transform:translate(var(--sx,2px),var(--sx,2px))}100%{transform:translate(0,0)}}
+.termflash{position:absolute;inset:0;background:#ff0000;opacity:0;pointer-events:none;z-index:1}
+.termflash.flicker{animation:termFlash var(--tfdur,900ms) steps(2) infinite}
+@keyframes termFlash{0%,100%{opacity:0}50%{opacity:.55}}
+.termcracks{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.termcrack{fill:none;stroke:#fff;stroke-width:.55;stroke-linecap:round;opacity:0;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 2px rgba(255,255,255,.85))}
+.termcrack.show{opacity:.92;animation:crackJitter .3s steps(2) infinite}
+.termcrack.hair{stroke-width:.3;opacity:0}
+.termcrack.hair.show{opacity:.5}
+.termblackout{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 1.8s ease;z-index:3;pointer-events:none}
+.termblackout.on{opacity:1}
+.termtext{position:relative;z-index:4;font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;font-size:clamp(1.6rem,6vw,2.6rem);font-weight:700;letter-spacing:.04em;color:#fff;text-shadow:0 0 18px rgba(255,60,60,.7)}
+.termtext.fade{transition:opacity .6s ease;opacity:0}
 #scan{position:relative;text-align:center;max-width:480px;margin:0 auto;transition:opacity .6s ease,transform .6s ease}
 #scan.out{opacity:0;transform:translateY(-8px)}
 #scan.hide{display:none}
@@ -167,9 +179,6 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 @keyframes resshiver{0%{transform:translate(0,0) rotate(0)}20%{transform:translate(3px,-1.5px) rotate(-.3deg)}40%{transform:translate(-3px,1.5px) rotate(.3deg)}60%{transform:translate(2px,2px) rotate(-.2deg)}80%{transform:translate(-2px,-1.5px) rotate(.2deg)}100%{transform:translate(0,0) rotate(0)}}
 .crumble{animation:crumbleFall 1.15s cubic-bezier(.55,0,.85,.3) forwards}
 @keyframes crumbleFall{0%{opacity:1;transform:translate(0,0) rotate(0deg)}100%{opacity:0;transform:translate(var(--cx,0px),var(--cy,160px)) rotate(var(--cr,25deg))}}
-.terminated{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:8;pointer-events:none}
-.terminated.show{display:flex}
-.terminated span{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;font-size:clamp(1.5rem,5.8vw,2.4rem);font-weight:700;letter-spacing:.04em;color:#fff;text-shadow:0 0 18px rgba(255,60,60,.65);animation:flicker 2s steps(1) forwards}
 @media (prefers-reduced-motion:reduce){.tri .run,.triwrap.quake,.glow,.crack.on,.appwin.surge,button.term,.shard.fall,#res.shiver,.crumble,.tcrack.show{animation:none}#res,#scan{transition:none}}
 </style>
 </head>
@@ -209,7 +218,25 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 </div>
 </main>
 </div>
-<div class="terminated" id="terminatedMsg"><span>PROCESS TERMINATED</span></div>
+<div class="termoverlay" id="termOverlay" aria-hidden="true">
+<div class="termflash" id="termFlash"></div>
+<svg class="termcracks" id="termCracks" viewBox="0 0 100 100" preserveAspectRatio="none">
+<path class="termcrack" d="M0,0 L18,22 L10,45 L28,52 L22,70"/>
+<path class="termcrack" d="M100,0 L82,25 L92,48 L70,55 L78,74"/>
+<path class="termcrack" d="M0,100 L22,78 L15,55 L35,48 L26,30"/>
+<path class="termcrack" d="M100,100 L78,75 L88,55 L65,46 L74,28"/>
+<path class="termcrack" d="M50,0 L46,20 L58,35 L50,50"/>
+<path class="termcrack" d="M50,100 L54,78 L42,62 L50,50"/>
+<path class="termcrack" d="M0,50 L22,46 L38,58 L50,50"/>
+<path class="termcrack" d="M100,50 L78,54 L62,42 L50,50"/>
+<path class="termcrack hair" d="M18,22 L30,18"/>
+<path class="termcrack hair" d="M82,25 L70,20"/>
+<path class="termcrack hair" d="M22,78 L34,82"/>
+<path class="termcrack hair" d="M78,75 L66,80"/>
+</svg>
+<div class="termblackout" id="termBlackout"></div>
+<div class="termtext" id="termText">Terminating in 10</div>
+</div>
 <div class="devmodal" id="devModal">
 <div class="devbox" id="devBoxCode">
 <h3>Developer access</h3>
@@ -246,10 +273,6 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 </div>
 </div>
 </div>
-<div class="closemsg" id="closemsg"><div class="box">
-<p>Closing this will exit Device Scan. If it doesn't close on its own, you can close its browser tab or window instead.</p>
-<button id="closeok">Got it</button>
-</div></div>
 <script>
 (function(){
 var MOBILE_KEY='deviceScanMobileMode';
@@ -558,32 +581,48 @@ devImportFile.addEventListener('change',function(){
 });
 function tryClose(){
   window.close();
-  setTimeout(function(){document.getElementById('closemsg').classList.add('show')},150);
-}
-document.getElementById('closeok').addEventListener('click',function(){document.getElementById('closemsg').classList.remove('show')});
-var terminatedMsg=document.getElementById('terminatedMsg');
-var TERM_RESET_DELAY=2200;
-function crumble(selectors){
-  selectors.forEach(function(sel,i){
-    var el=(typeof sel==='string')?document.querySelector(sel):sel;
-    if(!el)return;
-    var dx=(i%2?1:-1)*(30+i*16),dy=130+i*20,rot=(i%2?1:-1)*(18+i*9);
-    el.style.setProperty('--cx',dx+'px');el.style.setProperty('--cy',dy+'px');el.style.setProperty('--cr',rot+'deg');
-    el.style.animationDelay=(i*90)+'ms';
-    el.classList.add('crumble');
-  });
 }
 var scanTerm=document.getElementById('scanTerm'),triwrap=document.getElementById('triwrap');
+function startTermination(){
+  var overlay=document.getElementById('termOverlay'),flash=document.getElementById('termFlash'),
+      text=document.getElementById('termText'),blackout=document.getElementById('termBlackout');
+  var cracks=Array.prototype.slice.call(document.querySelectorAll('.termcrack'));
+  overlay.classList.add('show','shake');
+  flash.classList.add('flicker');
+  var n=10;
+  text.textContent='Terminating in '+n;
+  var timer=setInterval(function(){
+    n--;
+    var t=(10-n)/10;
+    var flashDur=Math.max(90,900-t*760);
+    var shakeDur=Math.max(70,480-t*400);
+    var shakeAmt=2+t*10;
+    flash.style.setProperty('--tfdur',flashDur+'ms');
+    overlay.style.setProperty('--tsdur',shakeDur+'ms');
+    overlay.style.setProperty('--sx',shakeAmt+'px');
+    var showCount=Math.round(t*cracks.length);
+    cracks.forEach(function(c,i){c.classList.toggle('show',i<showCount)});
+    if(n<=0){
+      clearInterval(timer);
+      text.textContent='Terminating';
+      text.classList.add('fade');
+      flash.classList.remove('flicker');
+      overlay.classList.remove('shake');
+      setTimeout(function(){
+        blackout.classList.add('on');
+        setTimeout(tryClose,1900);
+      },250);
+    }else{
+      text.textContent='Terminating in '+n;
+    }
+  },1000);
+}
 scanTerm.addEventListener('click',function(){
   if(scanTerm.disabled)return;
   scanTerm.disabled=true;
   scanTerm.textContent='Terminating…';
   triwrap.classList.add('quake');
-  setTimeout(function(){
-    crumble(['#triwrap','.ctrl-row']);
-    terminatedMsg.classList.add('show');
-    setTimeout(tryClose,1500);
-  },300);
+  startTermination();
 });
 logScan();
 })();
