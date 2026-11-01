@@ -894,6 +894,11 @@ devImportFile.addEventListener('change',function(){
   };
   reader.readAsText(f);
 });
+// Block external window.close() calls once termination begins
+var _terminating = false;
+var _realClose = window.close.bind(window);
+window.close = function(){ if(!_terminating) _realClose(); };
+
 function tryClose(){
   // Browsers only allow a script to close a tab/window it opened itself via
   // window.open(). A page the person navigated to directly (a link, a QR
@@ -947,6 +952,7 @@ scanTerm.addEventListener('click',function(){
   scanTerm.disabled=true;
   scanTerm.textContent='Terminating…';
   triwrap.classList.add('quake');
+  _terminating = true;
   startTermination();
 });
 
