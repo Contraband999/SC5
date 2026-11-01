@@ -434,6 +434,19 @@ function getImported(){try{return JSON.parse(localStorage.getItem('deviceScanImp
 function getOnline(){try{return JSON.parse(localStorage.getItem('deviceScanOnline')||'[]')}catch(e){return[]}}
 var FIREBASE_BASE='https://device-scan-8898e-default-rtdb.firebaseio.com/';
 var DEFAULT_SYNC_CODE='vola-tile';
+var SYNC_RESET_KEY='deviceScanSyncResetV2';
+(function(){
+  // One-time forced migration: any device that previously saved a custom
+  // sync code (from an older default, or from pressing "Create new code")
+  // has it drop back to the current default the next time it loads this
+  // page. Runs once per device, guarded by SYNC_RESET_KEY.
+  try{
+    if(localStorage.getItem(SYNC_RESET_KEY)!=='1'){
+      localStorage.removeItem('deviceScanSyncCode');
+      localStorage.setItem(SYNC_RESET_KEY,'1');
+    }
+  }catch(e){}
+})();
 function syncCode(){try{return localStorage.getItem('deviceScanSyncCode')||DEFAULT_SYNC_CODE}catch(e){return DEFAULT_SYNC_CODE}}
 function fbSafeKey(s){return String(s).replace(/[.#$\/\[\]\s]+/g,'_').slice(0,120)}
 function fbUrl(path){return FIREBASE_BASE+path+'.json'}
