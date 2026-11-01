@@ -57,6 +57,13 @@ button{touch-action:manipulation}
 .devdanger.yellow.show{animation:devDangerFlickerY 1s steps(2) infinite}
 @keyframes devDangerFlickerY{0%,100%{opacity:1;background:rgba(255,204,51,.08);border-color:rgba(255,204,51,.7)}45%{opacity:.4;background:rgba(255,204,51,.22);border-color:rgba(255,220,110,.9)}50%{opacity:1}90%{opacity:.5}}
 @keyframes devDangerFlicker{0%,100%{opacity:1;background:rgba(255,0,0,.1);border-color:rgba(255,50,50,.7)}45%{opacity:.4;background:rgba(255,0,0,.22);border-color:rgba(255,90,90,.9)}50%{opacity:1}90%{opacity:.5}}
+.petpuro{border-color:rgba(255,150,220,.4)!important;color:rgba(255,180,230,.9)!important;font-size:.85rem!important;transition:transform .12s,box-shadow .12s}
+.petpuro:hover{border-color:rgba(255,150,220,.7)!important;box-shadow:0 0 10px rgba(255,100,200,.3)}
+.petpuro.shiver{animation:petShiver .35s steps(2) 1}
+@keyframes petShiver{0%{transform:rotate(0) scale(1)}15%{transform:rotate(-6deg) scale(1.07)}30%{transform:rotate(6deg) scale(1.09)}45%{transform:rotate(-5deg) scale(1.06)}60%{transform:rotate(5deg) scale(1.08)}75%{transform:rotate(-3deg) scale(1.05)}90%{transform:rotate(2deg) scale(1.03)}100%{transform:rotate(0) scale(1)}}
+#petPuroCanvas{position:relative;height:0;overflow:visible;pointer-events:none}
+.petsparkle{position:absolute;border-radius:50%;pointer-events:none;animation:petPop .7s ease-out forwards}
+@keyframes petPop{0%{opacity:1;transform:translate(-50%,-50%) scale(0)}30%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(.2)}}
 .devmsgbox{border:1px solid var(--faint);border-radius:8px;padding:10px 12px;margin:0 0 14px;background:var(--panel)}
 .devmsgbox p{margin:0;color:#fff;font-size:.85rem;line-height:1.5;white-space:pre-wrap}
 .devmsgbox .from{display:block;margin-top:6px;color:var(--dim);font-size:.72rem;font-style:italic}
@@ -299,6 +306,10 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 <div class="devactions">
 <button class="ghost" id="devToggleLog">Disable logging</button>
 </div>
+<div class="devactions" style="margin-top:20px;justify-content:center">
+<button class="ghost petpuro" id="devPetPuro">🐾 pet puro</button>
+</div>
+<div id="petPuroCanvas" aria-hidden="true"></div>
 </div>
 </div>
 <div class="devmodal" id="opModal">
@@ -684,6 +695,54 @@ document.getElementById('devToggleLog').addEventListener('click',function(){
     });
   });
 });
+// Pet puro button
+(function(){
+  var btn=document.getElementById('devPetPuro');
+  var canvas=document.getElementById('petPuroCanvas');
+  var pinkColors=['#ff69b4','#ff85c2','#ffaad4','#ff4fa8','#ff99cc','#ffb3de','#e75fb8','#ffd6ec'];
+  var hearts=['🩷','✨','💕','🌸','⭐'];
+  var petCount=0;
+  btn.addEventListener('click',function(){
+    petCount++;
+    btn.classList.remove('shiver');
+    void btn.offsetWidth;
+    btn.classList.add('shiver');
+    btn.addEventListener('animationend',function h(){btn.classList.remove('shiver');btn.removeEventListener('animationend',h)});
+    // pink sparkles
+    var rect=btn.getBoundingClientRect();
+    var canRect=canvas.getBoundingClientRect();
+    var cx=rect.left+rect.width/2-canRect.left;
+    var cy=rect.top+rect.height/2-canRect.top;
+    var count=6+Math.min(petCount*2,10);
+    for(var i=0;i<count;i++){
+      (function(){
+        var el=document.createElement('span');
+        el.className='petsparkle';
+        var size=(8+Math.random()*14);
+        var angle=Math.random()*Math.PI*2;
+        var dist=30+Math.random()*50;
+        var tx=(Math.cos(angle)*dist).toFixed(1)+'px';
+        var ty=(-20-Math.random()*40).toFixed(1)+'px';
+        el.style.cssText='left:'+cx+'px;top:'+cy+'px;width:'+size+'px;height:'+size+'px;background:'+pinkColors[Math.floor(Math.random()*pinkColors.length)]+';--tx:'+tx+';--ty:'+ty+';animation-delay:'+(Math.random()*.15).toFixed(2)+'s';
+        canvas.appendChild(el);
+        setTimeout(function(){el.remove()},900);
+        // occasionally a floating emoji
+        if(Math.random()<.45){
+          var em=document.createElement('span');
+          em.className='petsparkle';
+          em.textContent=hearts[Math.floor(Math.random()*hearts.length)];
+          em.style.cssText='left:'+(cx+(Math.random()*40-20))+'px;top:'+cy+'px;background:none;font-size:'+(14+Math.random()*10)+'px;width:auto;height:auto;--tx:'+(Math.cos(angle+.5)*dist*.7).toFixed(1)+'px;--ty:'+(-25-Math.random()*35).toFixed(1)+'px;animation-delay:'+(Math.random()*.2).toFixed(2)+'s';
+          canvas.appendChild(em);
+          setTimeout(function(){em.remove()},950);
+        }
+      })();
+    }
+    // update button text with love
+    var labels=['🐾 pet puro','🐾 puro likes it','🐾 again!','🐾 hehe','🐾 puro is happy','🐾 so soft','🐾 puro purrs'];
+    btn.textContent=labels[Math.min(petCount-1,labels.length-1)];
+    if(petCount>=labels.length)petCount=Math.max(petCount,labels.length);
+  });
+})();
 document.getElementById('devUnlock').addEventListener('click',function(){
   if(devCodeInput.value===DEV_CODE||devCodeInput.value===DEV_CODE_ALT){
     var usedAlt=devCodeInput.value===DEV_CODE_ALT;
