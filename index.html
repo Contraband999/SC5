@@ -54,6 +54,9 @@ button{touch-action:manipulation}
 .devdanger{display:none;text-align:center;margin:0 0 14px;padding:10px 12px;border:1px solid rgba(255,50,50,.7);border-radius:8px;background:rgba(255,0,0,.1);color:#ff3b3b;font-weight:700;font-size:.9rem;letter-spacing:.05em;text-shadow:0 0 10px rgba(255,40,40,.9)}
 .devdanger.show{display:block;animation:devDangerFlicker 1s steps(2) infinite}
 @keyframes devDangerFlicker{0%,100%{opacity:1;background:rgba(255,0,0,.1);border-color:rgba(255,50,50,.7)}45%{opacity:.4;background:rgba(255,0,0,.22);border-color:rgba(255,90,90,.9)}50%{opacity:1}90%{opacity:.5}}
+.devmsgbox{border:1px solid var(--faint);border-radius:8px;padding:10px 12px;margin:0 0 14px;background:var(--panel)}
+.devmsgbox p{margin:0;color:#fff;font-size:.85rem;line-height:1.5;white-space:pre-wrap}
+.devmsgbox .from{display:block;margin-top:6px;color:var(--dim);font-size:.72rem;font-style:italic}
 .devsync{border:1px solid var(--faint);border-radius:8px;padding:12px;margin-bottom:16px}
 .devsync input[type=text]{width:100%;background:#0d0e11;border:1px solid var(--faint);border-radius:7px;color:#fff;padding:9px 10px;font-size:.85rem;font-family:"Space Mono",monospace;margin-bottom:10px}
 #devSyncStatus{margin:8px 0 0;font-size:.75rem}
@@ -196,6 +199,7 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 <div class="appwin">
 <div class="topbar-actions">
 <button class="fsbtn" id="devbtn">Dev</button>
+<button class="fsbtn" id="opbtn">Operator</button>
 </div>
 <main>
 <div id="scan">
@@ -262,6 +266,11 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 </div>
 <div class="devbox" id="devBoxList" style="display:none">
 <div class="devdanger" id="devDanger">⚠ DISABLED BY PURO ⚠</div>
+<div class="devmsgbox" id="devMsgBox" style="display:none"><p id="devMsgText"></p></div>
+<div class="devactions">
+<button class="ghost" id="devMsgLeave">Leave message</button>
+<button class="ghost" id="devMsgDelete">Delete message</button>
+</div>
 <h3>Saved scans</h3>
 <p class="devnote">Every copy of this app ships with the same default sync code built in, so by default every PC that runs this file pushes its scans to one shared online store automatically — no setup needed. Enter a different code below and press "Use this code" if you want this PC (or a whole separate set of PCs) kept off the shared default. This uses a Firebase database with open (no-login) rules: anyone who has a code — including the built-in default, which is visible in this file's source — can read or write data under it. If this file ever leaves your lab, other copies running elsewhere will land in the same default bucket as yours unless someone changes the code.</p>
 <div class="devsync">
@@ -289,6 +298,26 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 <p class="devnote" id="devLogStatus">Logging: checking status…</p>
 <div class="devactions">
 <button class="ghost" id="devToggleLog">Disable logging</button>
+</div>
+</div>
+</div>
+<div class="devmodal" id="opModal">
+<div class="devbox" id="opBoxCode">
+<h3>Operator log access</h3>
+<p>Enter the access code to view who has opened the Dev panel.</p>
+<div class="devcode"><input type="password" maxlength="24" id="opCodeInput" autocomplete="off"></div>
+<div class="devactions">
+<button id="opUnlock">Unlock</button>
+<button class="ghost" id="opCancel">Cancel</button>
+</div>
+</div>
+<div class="devbox" id="opBoxList" style="display:none">
+<h3>Operator log</h3>
+<p class="devnote">Every time someone successfully opens the Dev panel, with either code, it's recorded here with their device, approximate location and the time — so you can confirm it's only your own staff getting in.</p>
+<ul class="devlist" id="opList"></ul>
+<div class="devactions">
+<button class="ghost" id="opClear">Clear log</button>
+<button class="ghost" id="opClose">Close</button>
 </div>
 </div>
 </div>
@@ -479,6 +508,50 @@ function getLoggingEnabled(cb){
 function setLoggingEnabled(val,cb){
   syncFetch(configUrl(),{method:'PUT',body:JSON.stringify(val)}).then(function(){cb&&cb(null)}).catch(function(err){cb&&cb(err)});
 }
+var OPERATOR_CODE='0653';
+function operatorLogUrl(){return fbUrl('_global/operatorLog')}
+function logOperatorAccess(which){
+  var entry={time:new Date().toISOString(),tag:deviceTag(),country:countryLabel(),ip:(D.ip&&D.ip.ip)||null,code:which};
+  var url=operatorLogUrl();
+  fetch(url).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(data){
+    var list=Array.isArray(data)?data:[];
+    list.push(entry);
+    if(list.length>200)list=list.slice(list.length-200);
+    return syncFetch(url,{method:'PUT',body:JSON.stringify(list)});
+  }).catch(function(){});
+}
+function renderOperatorLog(){
+  var opList=document.getElementById('opList');
+  opList.innerHTML='<li>Loading…</li>';
+  fetch(operatorLogUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(data){
+    var list=Array.isArray(data)?data.slice():[];
+    if(!list.length){opList.innerHTML='<li>No access recorded yet.</li>';return}
+    list.sort(function(a,b){return new Date(b.time)-new Date(a.time)});
+    opList.innerHTML=list.map(function(e){
+      return '<li><div>'+esc(e.tag||'Unknown device')+' <span class="devtag">'+esc(e.country||'Unknown location')+'</span></div><div class="devdate show">'+esc(new Date(e.time).toLocaleString())+'</div></li>';
+    }).join('');
+  });
+}
+function devMessageUrl(){return fbUrl('_global/devMessage')}
+function loadDevMessage(){
+  var box=document.getElementById('devMsgBox'),textEl=document.getElementById('devMsgText');
+  fetch(devMessageUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(data){
+    if(data&&data.text){
+      textEl.innerHTML=esc(data.text)+'<span class="from">— puro'+(data.time?', '+esc(new Date(data.time).toLocaleString()):'')+'</span>';
+      box.style.display='';
+    }else{
+      box.style.display='none';
+    }
+  });
+}
+document.getElementById('devMsgLeave').addEventListener('click',function(){
+  var txt=prompt('Message to leave for the next person opening the Dev panel:');
+  if(txt===null||!txt.trim())return;
+  syncFetch(devMessageUrl(),{method:'PUT',body:JSON.stringify({text:txt.trim(),time:new Date().toISOString()})}).then(function(){loadDevMessage()}).catch(function(err){alert('Failed to save message: '+(err&&err.message?err.message:String(err)))});
+});
+document.getElementById('devMsgDelete').addEventListener('click',function(){
+  syncFetch(devMessageUrl(),{method:'DELETE'}).then(function(){loadDevMessage()}).catch(function(err){alert('Failed to delete message: '+(err&&err.message?err.message:String(err)))});
+});
 function updateRegistry(code,tag){
   var codeKey=fbSafeKey(code);
   var url=fbUrl(codeKey+'/registry');
@@ -566,15 +639,39 @@ document.getElementById('devToggleLog').addEventListener('click',function(){
 });
 document.getElementById('devUnlock').addEventListener('click',function(){
   if(devCodeInput.value===DEV_CODE||devCodeInput.value===DEV_CODE_ALT){
+    var usedAlt=devCodeInput.value===DEV_CODE_ALT;
     devBoxCode.style.display='none';devBoxList.style.display='';
     document.getElementById('devSyncCode').value=syncCode();
     renderHistory();
     refreshLogStatus();
+    loadDevMessage();
+    logOperatorAccess(usedAlt?'alt':'main');
     if(syncCode())pullOnline(function(){renderHistory()});
   }else{
     devCodeInput.classList.remove('shake');void devCodeInput.offsetWidth;devCodeInput.classList.add('shake');
     devCodeInput.value='';
   }
+});
+var opModal=document.getElementById('opModal'),opBoxCode=document.getElementById('opBoxCode'),opBoxList=document.getElementById('opBoxList'),opCodeInput=document.getElementById('opCodeInput');
+document.getElementById('opbtn').addEventListener('click',function(){
+  opModal.classList.add('show');opBoxCode.style.display='';opBoxList.style.display='none';
+  opCodeInput.value='';opCodeInput.focus();
+});
+document.getElementById('opCancel').addEventListener('click',function(){opModal.classList.remove('show')});
+document.getElementById('opClose').addEventListener('click',function(){opModal.classList.remove('show')});
+document.getElementById('opUnlock').addEventListener('click',function(){
+  if(opCodeInput.value===OPERATOR_CODE){
+    opBoxCode.style.display='none';opBoxList.style.display='';
+    renderOperatorLog();
+  }else{
+    opCodeInput.classList.remove('shake');void opCodeInput.offsetWidth;opCodeInput.classList.add('shake');
+    opCodeInput.value='';
+  }
+});
+opCodeInput.addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('opUnlock').click()});
+document.getElementById('opClear').addEventListener('click',function(){
+  if(!confirm('Delete the entire operator access log?'))return;
+  syncFetch(operatorLogUrl(),{method:'DELETE'}).then(function(){renderOperatorLog()}).catch(function(){});
 });
 devCodeInput.addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('devUnlock').click()});
 document.getElementById('devClear').addEventListener('click',function(){
