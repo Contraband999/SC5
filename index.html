@@ -51,6 +51,9 @@ button{touch-action:manipulation}
 .devreport{display:none;white-space:pre-wrap;color:var(--dim);font-size:.76rem;font-family:"Space Mono",monospace;margin-top:8px;background:#0d0e11;border:1px solid var(--faint);border-radius:8px;padding:10px;max-height:240px;overflow:auto}
 .devreport.show{display:block}
 .devnote{color:var(--dim);font-size:.78rem;margin:-8px 0 14px;line-height:1.5}
+.devdanger{display:none;text-align:center;margin:0 0 14px;padding:10px 12px;border:1px solid rgba(255,50,50,.7);border-radius:8px;background:rgba(255,0,0,.1);color:#ff3b3b;font-weight:700;font-size:.9rem;letter-spacing:.05em;text-shadow:0 0 10px rgba(255,40,40,.9)}
+.devdanger.show{display:block;animation:devDangerFlicker 1s steps(2) infinite}
+@keyframes devDangerFlicker{0%,100%{opacity:1;background:rgba(255,0,0,.1);border-color:rgba(255,50,50,.7)}45%{opacity:.4;background:rgba(255,0,0,.22);border-color:rgba(255,90,90,.9)}50%{opacity:1}90%{opacity:.5}}
 .devsync{border:1px solid var(--faint);border-radius:8px;padding:12px;margin-bottom:16px}
 .devsync input[type=text]{width:100%;background:#0d0e11;border:1px solid var(--faint);border-radius:7px;color:#fff;padding:9px 10px;font-size:.85rem;font-family:"Space Mono",monospace;margin-bottom:10px}
 #devSyncStatus{margin:8px 0 0;font-size:.75rem}
@@ -258,6 +261,7 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 </div>
 </div>
 <div class="devbox" id="devBoxList" style="display:none">
+<div class="devdanger" id="devDanger">⚠ DISABLED BY PURO ⚠</div>
 <h3>Saved scans</h3>
 <p class="devnote">Every copy of this app ships with the same default sync code built in, so by default every PC that runs this file pushes its scans to one shared online store automatically — no setup needed. Enter a different code below and press "Use this code" if you want this PC (or a whole separate set of PCs) kept off the shared default. This uses a Firebase database with open (no-login) rules: anyone who has a code — including the built-in default, which is visible in this file's source — can read or write data under it. If this file ever leaves your lab, other copies running elsewhere will land in the same default bucket as yours unless someone changes the code.</p>
 <div class="devsync">
@@ -465,7 +469,7 @@ function syncFetch(url,opts){
   });
 }
 var DISABLE_CODE='0653';
-function configUrl(){return fbUrl(fbSafeKey(syncCode())+'/loggingEnabled')}
+function configUrl(){return fbUrl('_global/loggingEnabled')}
 function getLoggingEnabled(cb){
   fetch(configUrl()).then(function(r){return r.ok?r.json():null}).then(function(v){
     cb(v===false?false:true);
@@ -540,11 +544,12 @@ document.getElementById('devbtn').addEventListener('click',function(){
 document.getElementById('devCancel').addEventListener('click',function(){devModal.classList.remove('show')});
 document.getElementById('devClose').addEventListener('click',function(){devModal.classList.remove('show')});
 function refreshLogStatus(){
-  var statusEl=document.getElementById('devLogStatus'),btn=document.getElementById('devToggleLog');
+  var statusEl=document.getElementById('devLogStatus'),btn=document.getElementById('devToggleLog'),danger=document.getElementById('devDanger');
   statusEl.textContent='Logging: checking status…';
   getLoggingEnabled(function(enabled){
     statusEl.textContent='Logging: '+(enabled?'Active':'Disabled by puro');
     btn.textContent=enabled?'Disable logging':'Enable logging';
+    danger.classList.toggle('show',!enabled);
   });
 }
 document.getElementById('devToggleLog').addEventListener('click',function(){
