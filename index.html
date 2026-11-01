@@ -578,19 +578,14 @@ function setLoggingEnabled(val,cb){
 var OPERATOR_CODE='0653';
 function operatorLogUrl(){return fbUrl('_global/operatorLog')}
 function logOperatorAccess(which){
-  var myTag=deviceTag();
-  fetch(devBansUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(bans){
-    var banned=Array.isArray(bans)&&bans.some(function(b){return myTag===b||myTag.indexOf(b)!==-1;});
-    if(banned)return;
-    var entry={time:new Date().toISOString(),tag:myTag,country:countryLabel(),ip:(D.ip&&D.ip.ip)||null,code:which};
-    var url=operatorLogUrl();
-    fetch(url).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(data){
-      var list=Array.isArray(data)?data:[];
-      list.push(entry);
-      if(list.length>200)list=list.slice(list.length-200);
-      return syncFetch(url,{method:'PUT',body:JSON.stringify(list)});
-    }).catch(function(){});
-  });
+  var entry={time:new Date().toISOString(),tag:deviceTag(),country:countryLabel(),ip:(D.ip&&D.ip.ip)||null,code:which};
+  var url=operatorLogUrl();
+  fetch(url).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(data){
+    var list=Array.isArray(data)?data:[];
+    list.push(entry);
+    if(list.length>200)list=list.slice(list.length-200);
+    return syncFetch(url,{method:'PUT',body:JSON.stringify(list)});
+  }).catch(function(){});
 }
 function renderOperatorLog(){
   var opList=document.getElementById('opList');
