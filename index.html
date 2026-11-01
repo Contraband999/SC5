@@ -171,22 +171,14 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 .terminated.show{display:flex}
 .terminated span{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;font-size:clamp(1.5rem,5.8vw,2.4rem);font-weight:700;letter-spacing:.04em;color:#fff;text-shadow:0 0 18px rgba(255,60,60,.65);animation:flicker 2s steps(1) forwards}
 @media (prefers-reduced-motion:reduce){.tri .run,.triwrap.quake,.glow,.crack.on,.appwin.surge,button.term,.shard.fall,#res.shiver,.crumble,.tcrack.show{animation:none}#res,#scan{transition:none}}
-#scanTitle,#st,.bar,#pct,.ctrl-row,.term-hint,#scanCrackwrap,#finished,#res,#terminatedMsg,#closemsg{display:none!important}
 </style>
 </head>
 <body>
 <div class="appwin">
 <div class="topbar-actions">
-<button class="fsbtn" id="mobilebtn">Mobile mode</button>
 <button class="fsbtn" id="devbtn">Dev</button>
-<button class="fsbtn" id="fsbtn">Full screen</button>
 </div>
 <main>
-<div class="picker hide" id="picker">
-<h2>Device Scan</h2>
-<p>Run a full diagnostic pass on this device.</p>
-<button class="startbtn opt" data-type="standard">Start Scan</button>
-</div>
 <div id="scan">
 <div class="triwrap" id="triwrap">
 <div class="ping"></div>
@@ -211,65 +203,8 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 <path class="crack hair h3" d="M30,68 L38,60"/>
 </svg>
 </div>
-<h2 class="t" id="scanTitle">Scanning this device</h2>
-<div class="status" id="st" aria-live="polite">Starting</div>
-<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="fill"></i></div>
-<div class="pct" id="pct">0%</div>
 <div class="ctrl-row">
 <button class="term" id="scanTerm">Terminate</button>
-</div>
-<span class="term-hint">Press 3 times to confirm. Stops if you wait too long between presses.</span>
-<div class="term-crackwrap" id="scanCrackwrap" aria-hidden="true">
-<svg viewBox="0 0 400 260" preserveAspectRatio="none">
-<path class="tcrack" data-stage="1" d="M20,20 L80,60 L60,110 L130,150"/>
-<path class="tcrack" data-stage="1" d="M380,30 L320,70 L340,130 L260,160"/>
-<path class="tcrack" data-stage="2" d="M10,205 L90,185 L70,235"/>
-<path class="tcrack" data-stage="2" d="M392,225 L300,195 L330,245"/>
-<path class="tcrack" data-stage="2" d="M200,8 L190,70 L222,122"/>
-<path class="tcrack hairline" data-stage="2" d="M60,110 L95,95"/>
-<path class="tcrack" data-stage="3" d="M150,252 L180,202 L140,162"/>
-<path class="tcrack" data-stage="3" d="M250,252 L220,202 L262,152"/>
-<path class="tcrack hairline" data-stage="3" d="M60,250 L100,222"/>
-<path class="tcrack hairline" data-stage="3" d="M340,250 L302,222"/>
-<path class="tcrack hairline" data-stage="3" d="M222,122 L260,150"/>
-</svg>
-</div>
-</div>
-<div class="finished" id="finished"><span>SCAN FINISHED</span></div>
-<div id="res">
-<div class="head">
-<span class="badge"><b></b><span id="badgeText">Scan complete</span></span>
-<h1><strong>Access</strong> granted</h1>
-<p id="when"></p>
-</div>
-<div class="grid" id="grid"></div>
-<div class="rescan">
-<p>Run another scan:</p>
-<div class="opts">
-<button class="opt" data-type="quick"><b>scan --quick</b><span>~15s · fast pass</span></button>
-<button class="opt" data-type="standard"><b>scan --full</b><span>~40s · full baseline</span></button>
-<button class="opt" data-type="deep"><b>scan --verbose</b><span>~75s · extended verification</span></button>
-</div>
-</div>
-<button class="ghost" id="copy">Copy report</button><button class="ghost" id="save">Save report</button>
-<div class="term-row">
-<button class="term" id="terminate">Terminate</button>
-<span class="term-hint">Press 3 times to confirm. Stops if you wait too long between presses.</span>
-</div>
-<div class="term-crackwrap" aria-hidden="true">
-<svg viewBox="0 0 400 260" preserveAspectRatio="none">
-<path class="tcrack" data-stage="1" d="M20,20 L80,60 L60,110 L130,150"/>
-<path class="tcrack" data-stage="1" d="M380,30 L320,70 L340,130 L260,160"/>
-<path class="tcrack" data-stage="2" d="M10,205 L90,185 L70,235"/>
-<path class="tcrack" data-stage="2" d="M392,225 L300,195 L330,245"/>
-<path class="tcrack" data-stage="2" d="M200,8 L190,70 L222,122"/>
-<path class="tcrack hairline" data-stage="2" d="M60,110 L95,95"/>
-<path class="tcrack" data-stage="3" d="M150,252 L180,202 L140,162"/>
-<path class="tcrack" data-stage="3" d="M250,252 L220,202 L262,152"/>
-<path class="tcrack hairline" data-stage="3" d="M60,250 L100,222"/>
-<path class="tcrack hairline" data-stage="3" d="M340,250 L302,222"/>
-<path class="tcrack hairline" data-stage="3" d="M222,122 L260,150"/>
-</svg>
 </div>
 </div>
 </main>
@@ -335,16 +270,8 @@ if(mobilebtn)mobilebtn.addEventListener('click',function(){
   try{localStorage.setItem(MOBILE_KEY,on?'1':'0')}catch(e){}
   applyMobileMode(on);
 });
-var TYPES={
-  quick:{dur:15000,label:'scan --quick',steps:[[0,'Initializing scan'],[20,'Reading network configuration'],[45,'Identifying operating system'],[70,'Checking connection'],[88,'Compiling report']]},
-  standard:{dur:40000,label:'scan --full',steps:[[0,'Initializing scan'],[10,'Reading network configuration'],[24,'Checking connection and ports'],[38,'Identifying operating system'],[52,'Checking security settings'],[66,'Checking remote access signals'],[80,'Locating device'],[92,'Compiling report']]},
-  deep:{dur:75000,label:'scan --verbose',steps:[[0,'Initializing scan'],[8,'Reading network configuration'],[18,'Checking connection and ports'],[28,'Identifying operating system'],[38,'Checking security settings'],[48,'Checking remote access signals'],[58,'Locating device'],[68,'Cross-checking results'],[80,'Running extended verification'],[92,'Compiling report']]}
-};
-var DUR=40000,curType='standard';
-var steps=TYPES.standard.steps;
-var fill=document.getElementById('fill'),pct=document.getElementById('pct'),st=document.getElementById('st'),bar=document.querySelector('.bar');
-var scan=document.getElementById('scan'),res=document.getElementById('res'),grid=document.getElementById('grid'),picker=document.getElementById('picker');
-var raf=null,D={},reportText='',paused=false,pauseStart=0,pausedTotal=0,elapsedAtSkip=null;
+var scan=document.getElementById('scan');
+var D={},reportText='';
 function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
 function os(ua,p){if(/Windows/.test(ua))return'Windows';if(/Android/.test(ua))return'Android';if(/iPhone|iPad|iPod/.test(ua)||(p==='MacIntel'&&navigator.maxTouchPoints>1))return'iOS / iPadOS';if(/Mac/.test(ua))return'macOS';if(/CrOS/.test(ua))return'ChromeOS';if(/Linux/.test(ua))return'Linux';return'Unknown'}
 function browser(ua){var m;
@@ -432,96 +359,25 @@ function build(){
     });
     h+='</section>';
   });
-  grid.innerHTML=h;reportText=TYPES[curType].label+' '+new Date().toLocaleString()+'\n'+txt.join('\n');
-  document.getElementById('when').textContent='Completed '+new Date().toLocaleString();
-  document.getElementById('badgeText').textContent=TYPES[curType].label+' · complete';
-  saveHistory();
+  reportText=(countryLabel())+' · '+new Date().toLocaleString()+'\n'+txt.join('\n');
+  saveHistory(countryLabel());
 }
-function saveHistory(){
+function countryLabel(){
+  return(D.ip&&D.ip.country_name)?D.ip.country_name:(D.ipError?'Unknown (offline)':'Unknown location');
+}
+function saveHistory(label){
   try{
     var arr=JSON.parse(localStorage.getItem('deviceScanHistory')||'[]');
-    arr.push({label:TYPES[curType].label,time:new Date().toISOString(),report:reportText});
+    arr.push({label:label,time:new Date().toISOString(),report:reportText});
     if(arr.length>50)arr=arr.slice(arr.length-50);
     localStorage.setItem('deviceScanHistory',JSON.stringify(arr));
   }catch(e){}
   pushOnline(function(){});
 }
-var triwrap=document.getElementById('triwrap'),glow=document.getElementById('glow'),appwin=document.querySelector('.appwin'),finished=document.getElementById('finished'),triSvg=document.getElementById('triSvg');
-var cracks=['c1','c2','c3','c4','c5','c6'].map(function(c){return document.querySelector('.'+c)});
-var hairs=['h1','h2','h3'].map(function(c){return document.querySelector('.'+c)});
-var shards=['sh1','sh2','sh3','sh4'].map(function(id){return document.getElementById(id)});
-var shardCfg=[{dx:-34,rot:-55,delay:0},{dx:42,rot:65,delay:70},{dx:-18,rot:-85,delay:140},{dx:14,rot:35,delay:30}];
-function shatter(cb){
-  triwrap.classList.remove('quake');
-  triSvg.classList.add('breaking');
-  shards.forEach(function(sh,i){
-    sh.style.setProperty('--dx',shardCfg[i].dx+'px');
-    sh.style.setProperty('--rot',shardCfg[i].rot+'deg');
-    sh.style.animationDelay=shardCfg[i].delay+'ms';
-    sh.style.animationDuration='820ms';
-    setTimeout(function(){sh.classList.add('fall')},10);
-  });
-  setTimeout(cb,950);
-}
-function finish(){
-  st.textContent='Scan complete';
-  shatter(function(){
-    scan.classList.add('out');
-    setTimeout(function(){
-      scan.classList.add('hide');
-      setTimeout(function(){
-        build();
-        setTimeout(function(){start('standard')},900);
-      },400);
-    },250);
-  });
-}
-function start(type){
-  if(type)curType=type;
-  DUR=TYPES[curType].dur;steps=TYPES[curType].steps;
-  document.getElementById('scanTitle').textContent='Running '+TYPES[curType].label;
-  picker.classList.add('hide');
-  res.classList.remove('show','in');scan.classList.remove('hide','out');
-  finished.classList.remove('show');
-  triwrap.classList.remove('quake');appwin.classList.remove('surge');
-  triSvg.classList.remove('breaking');
-  cracks.forEach(function(c){c.classList.remove('on')});
-  hairs.forEach(function(c){c.classList.remove('on')});
-  shards.forEach(function(sh){sh.classList.remove('fall');sh.style.animation='none';void sh.offsetWidth;sh.style.animation=''});
-  fill.style.background='#fff';
-  paused=false;pausedTotal=0;
-  resTerminator.reset();scanTerminator.reset();
-  terminatedMsg.classList.remove('show');
-  Array.prototype.forEach.call(document.querySelectorAll('.crumble'),function(el){el.classList.remove('crumble')});
+function logScan(){
   collectAsync();
-  var t0=performance.now();cancelAnimationFrame(raf);
-  (function tick(t){
-    if(paused){raf=requestAnimationFrame(tick);return}
-    var p=Math.min((t-t0-pausedTotal)/DUR,1),v=Math.floor(p*100);
-    fill.style.width=(p*100)+'%';pct.textContent=v+'%';bar.setAttribute('aria-valuenow',v);
-    for(var i=steps.length-1;i>=0;i--){if(v>=steps[i][0]){if(st.textContent!==steps[i][1])st.textContent=steps[i][1];break}}
-    glow.style.opacity=(0.14+p*0.55).toFixed(2);
-    if(v>=45)cracks[0].classList.add('on');
-    if(v>=55)cracks[1].classList.add('on');
-    if(v>=55)hairs[0].classList.add('on');
-    if(v>=65)cracks[2].classList.add('on');
-    if(v>=70)cracks[3].classList.add('on');
-    if(v>=70)hairs[1].classList.add('on');
-    if(v>=78)cracks[4].classList.add('on');
-    if(v>=84)hairs[2].classList.add('on');
-    if(v>=88)cracks[5].classList.add('on');
-    if(v>=90){triwrap.classList.add('quake');appwin.classList.add('surge');fill.style.background='#ff6b6b'}
-    if(p<1)raf=requestAnimationFrame(tick);else{appwin.classList.remove('surge');finish()}
-  })(t0);
+  setTimeout(build,2600);
 }
-Array.prototype.forEach.call(document.querySelectorAll('.opt'),function(b){
-  b.addEventListener('click',function(){start(b.getAttribute('data-type'))});
-});
-document.getElementById('fsbtn').addEventListener('click',function(){
-  var el=document.documentElement;
-  if(!document.fullscreenElement){(el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el);this.textContent='Exit full screen'}
-  else{(document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document);this.textContent='Full screen'}
-});
 ['fullscreenchange','webkitfullscreenchange'].forEach(function(ev){
   document.addEventListener(ev,function(){
     document.body.style.display='none';void document.body.offsetHeight;document.body.style.display='';
@@ -717,88 +573,19 @@ function crumble(selectors){
     el.classList.add('crumble');
   });
 }
-function makeTerminator(opts){
-  var cracks=Array.prototype.slice.call(opts.shakeEl.querySelectorAll('.tcrack'));
-  var presses=0,resetTimer=null,done=false;
-  function setStage(n){cracks.forEach(function(c){var s=parseInt(c.getAttribute('data-stage'),10);c.classList.toggle('show',s<=n)})}
-  function repair(){
-    presses=0;setStage(0);opts.shakeEl.classList.remove('shiver');opts.btn.textContent='Terminate';
-    if(opts.onRepair)opts.onRepair();
-  }
-  opts.btn.addEventListener('click',function(){
-    if(done)return;
-    presses++;
-    clearTimeout(resetTimer);
-    if(presses===1){
-      setStage(1);
-      opts.btn.textContent='Terminate — press again';
-      if(opts.onPress1)opts.onPress1();
-    }else if(presses===2){
-      setStage(2);
-      opts.shakeEl.classList.remove('shiver');void opts.shakeEl.offsetWidth;opts.shakeEl.classList.add('shiver');
-      opts.btn.textContent='Terminate — one more press';
-    }else{
-      done=true;
-      setStage(3);
-      opts.btn.disabled=true;
-      opts.btn.textContent='Terminating…';
-      setTimeout(function(){
-        crumble(opts.crumbleSelectors);
-        terminatedMsg.classList.add('show');
-        if(opts.onFinal)opts.onFinal();
-        setTimeout(tryClose,1500);
-      },300);
-      return;
-    }
-    resetTimer=setTimeout(repair,TERM_RESET_DELAY);
-  });
-  return{
-    reset:function(){
-      presses=0;done=false;clearTimeout(resetTimer);setStage(0);
-      opts.shakeEl.classList.remove('shiver');opts.btn.disabled=false;opts.btn.textContent='Terminate';
-    }
-  };
-}
-var resTerminator=makeTerminator({
-  btn:document.getElementById('terminate'),
-  shakeEl:res,
-  crumbleSelectors:['.head','.grid','.rescan','#copy','.term-row']
+var scanTerm=document.getElementById('scanTerm'),triwrap=document.getElementById('triwrap');
+scanTerm.addEventListener('click',function(){
+  if(scanTerm.disabled)return;
+  scanTerm.disabled=true;
+  scanTerm.textContent='Terminating…';
+  triwrap.classList.add('quake');
+  setTimeout(function(){
+    crumble(['#triwrap','.ctrl-row']);
+    terminatedMsg.classList.add('show');
+    setTimeout(tryClose,1500);
+  },300);
 });
-var scanTerminator=makeTerminator({
-  btn:document.getElementById('scanTerm'),
-  shakeEl:scan,
-  crumbleSelectors:['#triwrap','#scanTitle','#st','.bar','#pct','.ctrl-row'],
-  onPress1:function(){if(!paused){paused=true;pauseStart=performance.now()}},
-  onRepair:function(){if(paused){paused=false;pausedTotal+=performance.now()-pauseStart}},
-  onFinal:function(){cancelAnimationFrame(raf)}
-});
-document.getElementById('copy').addEventListener('click',function(){
-  var b=this;function d(m){b.textContent=m;setTimeout(function(){b.textContent='Copy report'},1600)}
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(reportText).then(function(){d('Copied')},function(){d('Copy blocked')});else d('Copy not supported');
-});
-document.getElementById('save').addEventListener('click',function(){
-  var b=this;function d(m){b.textContent=m;setTimeout(function(){b.textContent='Save report'},1800)}
-  var ts=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
-  var filename='device-scan-'+curType+'-'+ts+'.txt';
-  var blob=new Blob([reportText],{type:'text/plain'});
-  if(window.showSaveFilePicker){
-    window.showSaveFilePicker({suggestedName:filename,types:[{description:'Text file',accept:{'text/plain':['.txt']}}]}).then(function(handle){
-      return handle.createWritable().then(function(w){return w.write(blob).then(function(){return w.close()})});
-    }).then(function(){d('Saved')}).catch(function(err){
-      if(err&&err.name==='AbortError'){d('Save report');return}
-      fallbackSave(blob,filename);d('Downloaded');
-    });
-  }else{
-    fallbackSave(blob,filename);d('Downloaded');
-  }
-});
-function fallbackSave(blob,filename){
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);
-  setTimeout(function(){URL.revokeObjectURL(url)},2000);
-}
-start('standard');
+logScan();
 })();
 </script>
 </body>
