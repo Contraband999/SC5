@@ -961,155 +961,109 @@ scanTerm.addEventListener('click',function(){
 // Pixel dancer — Pixel Jeff appears at 5s into music, loops
 function startTermDancer(){
   setTimeout(function(){
-    var canvas = document.getElementById('termDancer');
-    if(!canvas){ return; }
+    // Create canvas fresh, append to body so nothing clips it
+    var old = document.getElementById('termDancer');
+    if(old) old.remove();
 
-    var S = 7; // scale factor — each logical px = 7 screen px
-    var W = 20, H = 24;
+    var S = 8;
+    var W = 16, H = 22;
+    var canvas = document.createElement('canvas');
+    canvas.id = 'termDancer';
     canvas.width  = W * S;
     canvas.height = H * S;
-    canvas.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9999;opacity:0;image-rendering:pixelated;image-rendering:crisp-edges;transition:opacity 0.6s;';
+    canvas.style.cssText = [
+      'position:fixed',
+      'left:50%',
+      'top:50%',
+      'transform:translate(-50%,-50%)',
+      'z-index:99999',
+      'opacity:0',
+      'image-rendering:pixelated',
+      'image-rendering:crisp-edges',
+      'transition:opacity 0.5s'
+    ].join(';');
+    document.body.appendChild(canvas);
 
     var ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
-    // Pixel Jeff colour palette
-    var D='#6b4f5a', // dark body / outline
-        M='#7d6068', // mid body
-        L='#9a7d87', // light body highlight
-        G='#a8e063', // green eye bg
-        K='#2a1f25', // dark eye pupil / outline dark
-        N=null;      // transparent
+    var D='#5a3d45', M='#7d6068', L='#a08088', G='#a8e063', K='#1a1010', N=null;
 
-    // Frame 0 — arms out (dabbing left)
+    // 16 cols x 22 rows, 2 frames
     var f0 = [
-      // row 0
-      N,N,N,N,N,N,D,D,N,D,D,N,N,N,N,N,N,N,N,N,
-      // row 1
-      N,N,N,N,N,D,M,D,D,M,D,D,N,N,N,N,N,N,N,N,
-      // row 2
-      N,N,N,N,D,M,M,M,M,M,M,M,D,N,N,N,N,N,N,N,
-      // row 3
-      N,N,N,D,M,G,G,M,M,M,G,G,M,D,N,N,N,N,N,N,
-      // row 4
-      N,N,N,D,M,G,K,M,M,M,K,G,M,D,N,N,N,N,N,N,
-      // row 5
-      N,N,N,D,M,G,G,M,M,M,G,G,M,D,N,N,N,N,N,N,
-      // row 6
-      N,N,N,D,M,M,K,K,M,K,K,M,M,D,N,N,N,N,N,N,
-      // row 7
-      N,N,N,N,D,M,M,M,M,M,M,M,D,N,N,N,N,N,N,N,
-      // row 8
-      N,N,D,D,D,M,M,M,M,M,M,M,D,D,N,N,N,N,N,N,
-      // row 9
-      N,D,M,M,D,M,M,M,M,M,M,M,D,M,D,N,N,N,N,N,
-      // row 10
-      D,M,M,D,N,D,M,M,M,M,M,D,N,D,M,M,D,N,N,N,
-      // row 11
-      D,M,D,N,N,N,D,M,M,M,D,N,N,N,D,M,D,N,N,N,
-      // row 12
-      N,D,N,N,N,N,N,D,M,D,N,N,N,N,N,D,N,N,N,N,
-      // row 13
-      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
-      // row 14
-      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
-      // row 15
-      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
-      // row 16
-      N,N,N,N,N,N,D,M,D,M,D,N,N,N,N,N,N,N,N,N,
-      // row 17
-      N,N,N,N,N,D,M,D,N,D,M,D,N,N,N,N,N,N,N,N,
-      // row 18
-      N,N,N,N,D,M,D,N,N,N,D,M,D,N,N,N,N,N,N,N,
-      // row 19
-      N,N,N,D,M,M,D,N,N,N,D,M,M,D,N,N,N,N,N,N,
-      // row 20
-      N,N,N,D,M,D,N,N,N,N,N,D,M,D,N,N,N,N,N,N,
-      // row 21
-      N,N,N,D,D,N,N,N,N,N,N,N,D,D,N,N,N,N,N,N,
-      // row 22
-      N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
-      // row 23
-      N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+      N,N,N,D,D,N,D,D,N,N,N,N,N,N,N,N,
+      N,N,D,M,D,D,M,M,D,N,N,N,N,N,N,N,
+      N,N,D,M,M,M,M,M,D,N,N,N,N,N,N,N,
+      N,D,M,G,G,M,G,G,M,D,N,N,N,N,N,N,
+      N,D,M,G,K,M,K,G,M,D,N,N,N,N,N,N,
+      N,D,M,G,G,M,G,G,M,D,N,N,N,N,N,N,
+      N,D,M,M,K,K,K,M,M,D,N,N,N,N,N,N,
+      N,N,D,M,M,M,M,M,D,N,N,N,N,N,N,N,
+      D,D,D,M,M,M,M,M,D,D,D,N,N,N,N,N,
+      D,M,D,M,M,M,M,M,D,M,D,N,N,N,N,N,
+      D,M,D,N,D,M,M,D,N,D,M,D,N,N,N,N,
+      N,D,N,N,N,D,M,D,N,N,D,N,N,N,N,N,
+      N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,
+      N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,
+      N,N,N,N,D,M,D,M,D,N,N,N,N,N,N,N,
+      N,N,N,D,M,D,N,D,M,D,N,N,N,N,N,N,
+      N,N,D,M,M,D,N,D,M,M,D,N,N,N,N,N,
+      N,N,D,M,D,N,N,N,D,M,D,N,N,N,N,N,
+      N,N,D,M,D,N,N,N,D,M,D,N,N,N,N,N,
+      N,N,D,M,M,D,N,D,M,M,D,N,N,N,N,N,
+      N,N,N,D,D,N,N,N,D,D,N,N,N,N,N,N,
+      N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
     ];
 
-    // Frame 1 — arms raised, legs shifted (dance step)
     var f1 = [
-      // row 0
-      N,N,N,N,N,N,D,D,N,D,D,N,N,N,N,N,N,N,N,N,
-      // row 1
-      N,N,N,N,N,D,M,D,D,M,D,D,N,N,N,N,N,N,N,N,
-      // row 2
-      N,N,N,N,D,M,M,M,M,M,M,M,D,N,N,N,N,N,N,N,
-      // row 3
-      N,N,N,D,M,G,G,M,M,M,G,G,M,D,N,N,N,N,N,N,
-      // row 4
-      N,N,N,D,M,G,K,M,M,M,K,G,M,D,N,N,N,N,N,N,
-      // row 5
-      N,N,N,D,M,G,G,M,M,M,G,G,M,D,N,N,N,N,N,N,
-      // row 6
-      N,N,N,D,M,M,K,K,M,K,K,M,M,D,N,N,N,N,N,N,
-      // row 7
-      N,N,N,N,D,M,M,M,M,M,M,M,D,N,N,N,N,N,N,N,
-      // row 8
-      N,D,D,N,D,M,M,M,M,M,M,M,D,N,D,D,N,N,N,N,
-      // row 9
-      D,M,M,D,D,M,M,M,M,M,M,M,D,D,M,M,D,N,N,N,
-      // row 10
-      D,M,D,N,N,D,M,M,M,M,M,D,N,N,D,M,D,N,N,N,
-      // row 11
-      N,D,N,N,N,N,D,M,M,M,D,N,N,N,N,D,N,N,N,N,
-      // row 12
-      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
-      // row 13
-      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
-      // row 14
-      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
-      // row 15
-      N,N,N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,N,N,
-      // row 16
-      N,N,N,N,N,N,D,M,D,M,D,N,N,N,N,N,N,N,N,N,
-      // row 17  — legs kick opposite direction
-      N,N,N,N,N,N,D,M,D,D,M,D,N,N,N,N,N,N,N,N,
-      // row 18
-      N,N,N,N,N,D,M,D,N,N,D,M,D,N,N,N,N,N,N,N,
-      // row 19
-      N,N,N,N,D,M,M,D,N,N,D,M,M,D,N,N,N,N,N,N,
-      // row 20
-      N,N,N,N,D,M,D,N,N,N,N,D,M,D,N,N,N,N,N,N,
-      // row 21
-      N,N,N,N,D,D,N,N,N,N,N,N,D,D,N,N,N,N,N,N,
-      // row 22
-      N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
-      // row 23
-      N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+      N,N,N,D,D,N,D,D,N,N,N,N,N,N,N,N,
+      N,N,D,M,D,D,M,M,D,N,N,N,N,N,N,N,
+      N,N,D,M,M,M,M,M,D,N,N,N,N,N,N,N,
+      N,D,M,G,G,M,G,G,M,D,N,N,N,N,N,N,
+      N,D,M,G,K,M,K,G,M,D,N,N,N,N,N,N,
+      N,D,M,G,G,M,G,G,M,D,N,N,N,N,N,N,
+      N,D,M,M,K,K,K,M,M,D,N,N,N,N,N,N,
+      N,N,D,M,M,M,M,M,D,N,N,N,N,N,N,N,
+      N,D,D,M,M,M,M,M,D,D,N,N,N,N,N,N,
+      D,M,D,D,M,M,M,D,D,M,D,N,N,N,N,N,
+      D,M,D,N,D,M,M,D,N,D,M,D,N,N,N,N,
+      N,D,N,N,N,D,M,D,N,N,D,N,N,N,N,N,
+      N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,
+      N,N,N,N,N,D,M,D,N,N,N,N,N,N,N,N,
+      N,N,N,N,D,M,D,M,D,N,N,N,N,N,N,N,
+      N,N,N,N,D,M,D,D,M,D,N,N,N,N,N,N,
+      N,N,N,D,M,M,D,D,M,M,D,N,N,N,N,N,
+      N,N,N,D,M,D,N,N,D,M,D,N,N,N,N,N,
+      N,N,N,D,M,D,N,N,D,M,D,N,N,N,N,N,
+      N,N,D,M,M,D,N,N,D,M,M,D,N,N,N,N,
+      N,N,D,D,N,N,N,N,N,D,D,N,N,N,N,N,
+      N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
     ];
 
-    var frames = [f0, f1];
-    var fi = 0;
-    var bobY = 0, bobDir = 1;
+    var frames=[f0,f1], fi=0, bobY=0, bobDir=1;
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      var fr = frames[fi % 2];
-      for (var r = 0; r < H; r++) {
-        for (var c = 0; c < W; c++) {
-          var col = fr[r * W + c];
-          if (col) { ctx.fillStyle = col; ctx.fillRect(c*S, r*S, S, S); }
+    function draw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      var fr=frames[fi%2];
+      for(var r=0;r<H;r++){
+        for(var c=0;c<W;c++){
+          var col=fr[r*W+c];
+          if(col){ctx.fillStyle=col;ctx.fillRect(c*S,r*S,S,S);}
         }
       }
     }
 
     draw();
-    requestAnimationFrame(function(){ canvas.style.opacity = '1'; });
+    // fade in
+    setTimeout(function(){ canvas.style.opacity='1'; }, 50);
 
-    setInterval(function() {
+    setInterval(function(){
       fi++;
-      bobY += bobDir * 3;
-      if (bobY >= 8 || bobY <= 0) bobDir *= -1;
-      canvas.style.transform = 'translate(-50%, calc(-50% + ' + bobY + 'px))';
+      bobY += bobDir*3;
+      if(bobY>=10||bobY<=0) bobDir*=-1;
+      canvas.style.transform='translate(-50%, calc(-50% + '+bobY+'px))';
       draw();
-    }, 250);
+    }, 280);
 
   }, 5000);
 }
