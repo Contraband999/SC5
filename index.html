@@ -55,8 +55,11 @@ button{touch-action:manipulation}
 .devdanger.show{display:block;animation:devDangerFlicker 1s steps(2) infinite}
 .devdanger.yellow{color:#ffcc33;border-color:rgba(255,204,51,.7);background:rgba(255,204,51,.08);text-shadow:0 0 10px rgba(255,204,51,.85)}
 .devdanger.yellow.show{animation:devDangerFlickerY 1s steps(2) infinite}
+.devdanger.green{color:#33ff88;border-color:rgba(51,255,120,.7);background:rgba(0,255,80,.08);text-shadow:0 0 10px rgba(40,255,100,.9)}
+.devdanger.green.show{animation:devDangerFlickerG 1s steps(2) infinite}
 @keyframes devDangerFlickerY{0%,100%{opacity:1;background:rgba(255,204,51,.08);border-color:rgba(255,204,51,.7)}45%{opacity:.4;background:rgba(255,204,51,.22);border-color:rgba(255,220,110,.9)}50%{opacity:1}90%{opacity:.5}}
 @keyframes devDangerFlicker{0%,100%{opacity:1;background:rgba(255,0,0,.1);border-color:rgba(255,50,50,.7)}45%{opacity:.4;background:rgba(255,0,0,.22);border-color:rgba(255,90,90,.9)}50%{opacity:1}90%{opacity:.5}}
+@keyframes devDangerFlickerG{0%,100%{opacity:1;background:rgba(0,255,80,.08);border-color:rgba(51,255,120,.7)}45%{opacity:.5;background:rgba(0,255,80,.18);border-color:rgba(100,255,160,.9)}50%{opacity:1}90%{opacity:.6}}
 .petpuro{border-color:rgba(255,60,60,.4)!important;color:rgba(255,120,120,.9)!important;font-size:.85rem!important;transition:transform .12s,box-shadow .12s}
 .petpuro:hover{border-color:rgba(255,60,60,.7)!important;box-shadow:0 0 10px rgba(255,0,0,.3)}
 .petpuro.shiver{animation:petShiver .35s steps(2) 1}
@@ -276,6 +279,7 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 </div>
 <div class="devbox" id="devBoxList" style="display:none">
 <div class="devdanger" id="devDanger">⚠ DISABLED BY PURO ⚠</div>
+<div class="devdanger green" id="devEnabled">✔ ENABLED BY PURO ✔</div>
 <div class="devdanger yellow" id="devMaint">⚠ UNDER MAINTENANCE ⚠</div>
 <div class="devmsgbox" id="devMsgBox" style="display:none"><p id="devMsgText"></p></div>
 <h3>Saved scans</h3>
@@ -676,12 +680,13 @@ document.getElementById('devbtn').addEventListener('click',function(){
 document.getElementById('devCancel').addEventListener('click',function(){devModal.classList.remove('show')});
 document.getElementById('devClose').addEventListener('click',function(){devModal.classList.remove('show')});
 function refreshLogStatus(){
-  var statusEl=document.getElementById('devLogStatus'),btn=document.getElementById('devToggleLog'),danger=document.getElementById('devDanger');
+  var statusEl=document.getElementById('devLogStatus'),btn=document.getElementById('devToggleLog'),danger=document.getElementById('devDanger'),enabled_banner=document.getElementById('devEnabled');
   statusEl.textContent='Logging: checking status…';
   getLoggingEnabled(function(enabled){
     statusEl.textContent='Logging: '+(enabled?'Active':'Disabled by puro');
     btn.textContent=enabled?'Disable logging':'Enable logging';
     danger.classList.toggle('show',!enabled);
+    enabled_banner.classList.toggle('show',enabled);
   });
 }
 document.getElementById('devToggleLog').addEventListener('click',function(){
