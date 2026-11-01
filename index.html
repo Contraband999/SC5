@@ -360,10 +360,8 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 <div class="devsync" id="opBanSection">
 <p class="devnote" style="margin-bottom:6px"><b>Banned devices</b> — scans from these device tags are silently ignored.</p>
 <ul class="devlist" id="opBanList"></ul>
-<div class="devactions" style="margin-top:8px;gap:6px">
-<input type="text" id="opBanNew" maxlength="64" placeholder="Device tag to ban…" autocomplete="off" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:6px;padding:6px 10px;color:#eee;font-size:.82rem;outline:none">
-<button class="ghost" id="opBanAdd">+ Ban</button>
-</div>
+<p class="devnote" style="margin-top:10px;margin-bottom:4px">Seen devices — select one to ban:</p>
+<ul class="devlist" id="opBanPicker"></ul>
 </div>
 <div class="devactions">
 <button class="ghost" id="opClear">Clear log</button>
@@ -603,16 +601,60 @@ function renderOperatorLog(){
 function maintUrl(){return fbUrl('_global/maintenanceMode')}
 function devPasswordsUrl(){return fbUrl('_global/devPasswords')}
 function devBansUrl(){return fbUrl('_global/devBans')}
+function devCodeDisabledUrl(){return fbUrl('_global/devCodeDisabled')}
+function devCodeAltDisabledUrl(){return fbUrl('_global/devCodeAltDisabled')}
 
 function loadPasswords(){
   var list=document.getElementById('opPassList');
   list.innerHTML='<li>Loading…</li>';
-  fetch(devPasswordsUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(data){
-    var arr=Array.isArray(data)?data:[];
-    if(!arr.length){list.innerHTML='<li style="color:#888">No extra passwords — only the built-in code works.</li>';return;}
-    list.innerHTML=arr.map(function(p,i){
-      return '<li style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:monospace;letter-spacing:.05em">'+esc(p)+'</span><button class="ghost" style="font-size:.75rem;padding:3px 8px;margin-left:8px" data-pi="'+i+'">Remove</button></li>';
-    }).join('');
+  // Fetch disabled flags and extra passwords in parallel
+  Promise.all([
+    fetch(devCodeDisabledUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}),
+    fetch(devCodeAltDisabledUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}),
+    fetch(devPasswordsUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null})
+  ]).then(function(results){
+    var mainDisabled=results[0]===true;
+    var altDisabled=results[1]===true;
+    var arr=Array.isArray(results[2])?results[2]:[];
+    var html='';
+    // Built-in codes at the top
+    var mainStyle=mainDisabled?'color:#888;text-decoration:line-through':'color:#fff';
+    var altStyle=altDisabled?'color:#888;text-decoration:line-through':'color:#fff';
+    html+='<li style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
+      +'<span><span style="font-family:monospace;letter-spacing:.05em;'+mainStyle+'">'+esc(DEV_CODE)+'</span>'
+      +'<span style="font-size:.7rem;color:#888;margin-left:6px">built-in</span></span>'
+      +'<button class="ghost" style="font-size:.75rem;padding:3px 8px;margin-left:8px" id="opPassToggleMain">'+(mainDisabled?'Enable':'Disable')+'</button>'
+      +'</li>';
+    html+='<li style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
+      +'<span><span style="font-family:monospace;letter-spacing:.05em;'+altStyle+'">'+esc(DEV_CODE_ALT)+'</span>'
+      +'<span style="font-size:.7rem;color:#888;margin-left:6px">built-in</span></span>'
+      +'<button class="ghost" style="font-size:.75rem;padding:3px 8px;margin-left:8px" id="opPassToggleAlt">'+(altDisabled?'Enable':'Disable')+'</button>'
+      +'</li>';
+    // Extra passwords
+    if(!arr.length){
+      html+='<li style="color:#888;padding-top:4px">No extra passwords added.</li>';
+    } else {
+      html+=arr.map(function(p,i){
+        return '<li style="display:flex;justify-content:space-between;align-items:center;padding:4px 0">'
+          +'<span style="font-family:monospace;letter-spacing:.05em">'+esc(p)+'</span>'
+          +'<button class="ghost" style="font-size:.75rem;padding:3px 8px;margin-left:8px" data-pi="'+i+'">Remove</button>'
+          +'</li>';
+      }).join('');
+    }
+    list.innerHTML=html;
+    // Toggle main built-in code
+    var btnMain=document.getElementById('opPassToggleMain');
+    if(btnMain)btnMain.addEventListener('click',function(){
+      var nowDisabled=btnMain.textContent==='Disable';
+      syncFetch(devCodeDisabledUrl(),{method:'PUT',body:JSON.stringify(nowDisabled)}).then(function(){loadPasswords();}).catch(function(err){alert('Failed: '+err.message);});
+    });
+    // Toggle alt built-in code
+    var btnAlt=document.getElementById('opPassToggleAlt');
+    if(btnAlt)btnAlt.addEventListener('click',function(){
+      var nowDisabled=btnAlt.textContent==='Disable';
+      syncFetch(devCodeAltDisabledUrl(),{method:'PUT',body:JSON.stringify(nowDisabled)}).then(function(){loadPasswords();}).catch(function(err){alert('Failed: '+err.message);});
+    });
+    // Remove extra password buttons
     list.querySelectorAll('[data-pi]').forEach(function(btn){
       btn.addEventListener('click',function(){
         var idx=parseInt(btn.getAttribute('data-pi'));
@@ -627,6 +669,7 @@ function loadPasswords(){
 document.getElementById('opPassAdd').addEventListener('click',function(){
   var inp=document.getElementById('opPassNew'),val=inp.value.trim();
   if(!val)return;
+  if(val===DEV_CODE||val===DEV_CODE_ALT){alert('That is a built-in code — manage it with the toggle above.');return;}
   fetch(devPasswordsUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(d){
     var a=Array.isArray(d)?d:[];
     if(a.indexOf(val)!==-1){alert('That password already exists.');return;}
@@ -642,7 +685,7 @@ function loadBans(){
     var arr=Array.isArray(data)?data:[];
     if(!arr.length){list.innerHTML='<li style="color:#888">No devices banned.</li>';return;}
     list.innerHTML=arr.map(function(p,i){
-      return '<li style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.8rem;color:#ddd">'+esc(p)+'</span><button class="ghost" style="font-size:.75rem;padding:3px 8px;margin-left:8px" data-bi="'+i+'">Unban</button></li>';
+      return '<li style="display:flex;justify-content:space-between;align-items:center;padding:4px 0"><span style="font-size:.8rem;color:#ddd">'+esc(p)+'</span><button class="ghost" style="font-size:.75rem;padding:3px 8px;margin-left:8px" data-bi="'+i+'">Unban</button></li>';
     }).join('');
     list.querySelectorAll('[data-bi]').forEach(function(btn){
       btn.addEventListener('click',function(){
@@ -650,21 +693,51 @@ function loadBans(){
         fetch(devBansUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(d){
           var a=Array.isArray(d)?d:[];a.splice(idx,1);
           return syncFetch(devBansUrl(),{method:'PUT',body:JSON.stringify(a)});
-        }).then(function(){loadBans();}).catch(function(err){alert('Failed: '+err.message);});
+        }).then(function(){loadBans();loadBanPicker();}).catch(function(err){alert('Failed: '+err.message);});
       });
     });
   });
 }
-document.getElementById('opBanAdd').addEventListener('click',function(){
-  var inp=document.getElementById('opBanNew'),val=inp.value.trim();
-  if(!val)return;
-  fetch(devBansUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(d){
-    var a=Array.isArray(d)?d:[];
-    if(a.indexOf(val)!==-1){alert('That device is already banned.');return;}
-    a.push(val);
-    return syncFetch(devBansUrl(),{method:'PUT',body:JSON.stringify(a)}).then(function(){inp.value='';loadBans();});
-  }).catch(function(err){alert('Failed: '+err.message);});
-});
+function loadBanPicker(){
+  var picker=document.getElementById('opBanPicker');
+  if(!picker)return;
+  picker.innerHTML='<li style="color:#888">Loading…</li>';
+  Promise.all([
+    fetch(operatorLogUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}),
+    fetch(devBansUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null})
+  ]).then(function(results){
+    var log=Array.isArray(results[0])?results[0]:[];
+    var banned=Array.isArray(results[1])?results[1]:[];
+    // Deduplicate tags from log
+    var seen={};
+    var tags=[];
+    log.forEach(function(entry){
+      if(entry&&entry.tag&&!seen[entry.tag]){seen[entry.tag]=true;tags.push(entry.tag);}
+    });
+    // Filter out already-banned ones
+    var unbanned=tags.filter(function(t){return banned.indexOf(t)===-1;});
+    if(!unbanned.length){
+      picker.innerHTML='<li style="color:#888">'+(tags.length?'All logged devices are already banned.':'No device logs yet.')+'</li>';
+      return;
+    }
+    picker.innerHTML=unbanned.map(function(t){
+      return '<li style="display:flex;justify-content:space-between;align-items:center;padding:4px 0">'
+        +'<span style="font-size:.8rem;color:#ddd">'+esc(t)+'</span>'
+        +'<button class="ghost" style="font-size:.75rem;padding:3px 8px;margin-left:8px" data-bt="'+esc(t)+'">Ban</button>'
+        +'</li>';
+    }).join('');
+    picker.querySelectorAll('[data-bt]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tag=btn.getAttribute('data-bt');
+        fetch(devBansUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(d){
+          var a=Array.isArray(d)?d:[];
+          if(a.indexOf(tag)===-1)a.push(tag);
+          return syncFetch(devBansUrl(),{method:'PUT',body:JSON.stringify(a)});
+        }).then(function(){loadBans();loadBanPicker();}).catch(function(err){alert('Failed: '+err.message);});
+      });
+    });
+  });
+}
 function devLockUrl(){return fbUrl('_global/devLocked')}
 function getFlag(url,cb){
   fetch(url).then(function(r){return r.ok?r.json():null}).then(function(v){cb(v===true)}).catch(function(){cb(false)});
@@ -869,8 +942,18 @@ document.getElementById('devUnlock').addEventListener('click',function(){
       if(syncCode())pullOnline(function(){renderHistory()});
     });
   }
-  if(_entered===DEV_CODE){_openDev(false);return;}
-  if(_entered===DEV_CODE_ALT){_openDev(true);return;}
+  if(_entered===DEV_CODE){
+    fetch(devCodeDisabledUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(v){
+      if(v===true){devCodeInput.classList.remove('shake');void devCodeInput.offsetWidth;devCodeInput.classList.add('shake');devCodeInput.value='';}
+      else{devCodeInput.value='';_openDev(false);}
+    });return;
+  }
+  if(_entered===DEV_CODE_ALT){
+    fetch(devCodeAltDisabledUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(v){
+      if(v===true){devCodeInput.classList.remove('shake');void devCodeInput.offsetWidth;devCodeInput.classList.add('shake');devCodeInput.value='';}
+      else{devCodeInput.value='';_openDev(true);}
+    });return;
+  }
   // Check Firebase extra passwords
   fetch(devPasswordsUrl()).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(extras){
     var arr=Array.isArray(extras)?extras:[];
@@ -889,7 +972,7 @@ document.getElementById('opCancel').addEventListener('click',function(){opModal.
 document.getElementById('opClose').addEventListener('click',function(){opModal.classList.remove('show')});
 document.getElementById('opUnlock').addEventListener('click',function(){
   if(opCodeInput.value===OPERATOR_CODE){
-    opBoxCode.style.display='none';opBoxList.style.display='';loadPasswords();loadBans();
+    opBoxCode.style.display='none';opBoxList.style.display='';loadPasswords();loadBans();loadBanPicker();
     renderOperatorLog();
     refreshOpControls();
   }else{
