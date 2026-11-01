@@ -538,8 +538,18 @@ document.getElementById('devUnlock').addEventListener('click',function(){
 });
 devCodeInput.addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('devUnlock').click()});
 document.getElementById('devClear').addEventListener('click',function(){
+  if(!confirm('This deletes ALL saved scans for every device on this sync code, not just this one. Continue?'))return;
   try{localStorage.removeItem('deviceScanHistory');localStorage.removeItem('deviceScanImported');localStorage.removeItem('deviceScanOnline')}catch(e){}
   renderHistory();
+  var code=syncCode();
+  if(!code)return;
+  syncStatus('Clearing shared data for all devices…');
+  var codeKey=fbSafeKey(code);
+  syncFetch(fbUrl(codeKey),{method:'DELETE'}).then(function(){
+    syncStatus('Cleared all saved scans for every device on this code.');
+  }).catch(function(err){
+    syncStatus('Local data cleared, but clearing the shared store failed: '+(err&&err.message?err.message:String(err)));
+  });
 });
 document.getElementById('devExport').addEventListener('click',function(){
   var b=this;function d(m){b.textContent=m;setTimeout(function(){b.textContent='Export this device'},1800)}
