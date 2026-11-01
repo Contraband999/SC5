@@ -271,10 +271,6 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 <div class="devdanger" id="devDanger">⚠ DISABLED BY PURO ⚠</div>
 <div class="devdanger yellow" id="devMaint">⚠ UNDER MAINTENANCE ⚠</div>
 <div class="devmsgbox" id="devMsgBox" style="display:none"><p id="devMsgText"></p></div>
-<div class="devactions">
-<button class="ghost" id="devMsgLeave">Leave message</button>
-<button class="ghost" id="devMsgDelete">Delete message</button>
-</div>
 <h3>Saved scans</h3>
 <p class="devnote">Every copy of this app ships with the same default sync code built in, so by default every PC that runs this file pushes its scans to one shared online store automatically — no setup needed. Enter a different code below and press "Use this code" if you want this PC (or a whole separate set of PCs) kept off the shared default. This uses a Firebase database with open (no-login) rules: anyone who has a code — including the built-in default, which is visible in this file's source — can read or write data under it. If this file ever leaves your lab, other copies running elsewhere will land in the same default bucket as yours unless someone changes the code.</p>
 <div class="devsync">
@@ -327,6 +323,11 @@ button.small{margin-top:0;padding:7px 14px;font-size:.8rem}
 <p class="devnote" id="opLockStatus">Dev panel access: checking…</p>
 <div class="devactions">
 <button class="ghost" id="opToggleLock">Lock Dev panel</button>
+</div>
+<p class="devnote">Message shown to the next person who opens the Dev panel, signed "— puro".</p>
+<div class="devactions">
+<button class="ghost" id="opMsgLeave">Leave message</button>
+<button class="ghost" id="opMsgDelete">Delete message</button>
 </div>
 </div>
 <div class="devactions">
@@ -590,13 +591,13 @@ function loadDevMessage(){
     }
   });
 }
-document.getElementById('devMsgLeave').addEventListener('click',function(){
+document.getElementById('opMsgLeave').addEventListener('click',function(){
   var txt=prompt('Message to leave for the next person opening the Dev panel:');
   if(txt===null||!txt.trim())return;
-  syncFetch(devMessageUrl(),{method:'PUT',body:JSON.stringify({text:txt.trim(),time:new Date().toISOString()})}).then(function(){loadDevMessage()}).catch(function(err){alert('Failed to save message: '+(err&&err.message?err.message:String(err)))});
+  syncFetch(devMessageUrl(),{method:'PUT',body:JSON.stringify({text:txt.trim(),time:new Date().toISOString()})}).then(function(){alert('Message saved.')}).catch(function(err){alert('Failed to save message: '+(err&&err.message?err.message:String(err)))});
 });
-document.getElementById('devMsgDelete').addEventListener('click',function(){
-  syncFetch(devMessageUrl(),{method:'DELETE'}).then(function(){loadDevMessage()}).catch(function(err){alert('Failed to delete message: '+(err&&err.message?err.message:String(err)))});
+document.getElementById('opMsgDelete').addEventListener('click',function(){
+  syncFetch(devMessageUrl(),{method:'DELETE'}).then(function(){alert('Message deleted.')}).catch(function(err){alert('Failed to delete message: '+(err&&err.message?err.message:String(err)))});
 });
 function updateRegistry(code,tag){
   var codeKey=fbSafeKey(code);
