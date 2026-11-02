@@ -544,7 +544,7 @@ function getHistory(){try{return JSON.parse(localStorage.getItem('deviceScanHist
 function getImported(){try{return JSON.parse(localStorage.getItem('deviceScanImported')||'[]')}catch(e){return[]}}
 function getOnline(){try{return JSON.parse(localStorage.getItem('deviceScanOnline')||'[]')}catch(e){return[]}}
 var FIREBASE_BASE='https://device-scan-8898e-default-rtdb.firebaseio.com/';
-var DEFAULT_SYNC_CODE='vola-tile';
+var DEFAULT_SYNC_CODE='Default-1';
 var SYNC_RESET_KEY='deviceScanSyncResetV2';
 (function(){
   // One-time forced migration: any device that previously saved a custom
