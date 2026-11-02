@@ -1050,7 +1050,7 @@ document.getElementById('devSyncNow').addEventListener('click',function(){
   });
 });
 document.getElementById('devSyncReset').addEventListener('click',function(){
-  try{localStorage.removeItem('deviceScanSyncCode')}catch(e){}
+  try{localStorage.setItem('deviceScanSyncCode',DEFAULT_SYNC_CODE)}catch(e){}
   document.getElementById('devSyncCode').value=DEFAULT_SYNC_CODE;
   syncStatus('Reset to the default code on this PC ('+DEFAULT_SYNC_CODE+').');
   pushOnline(function(){});
